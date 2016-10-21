@@ -28,10 +28,10 @@ public class SerialStrategy<C extends Element> extends InterruptableStrategy<C> 
         return new Generator<>();
     }
 
-    private DependencyStrategyHelper getDependencyStrategyHelper(Element element) {
+    private DependencyStrategyHelper getDependencyStrategyHelper(Element Element) {
         if (dependencyStrategyHelper == null) {
-            dependencyStrategyHelper = new DependencyStrategyHelper(element);
-            List<? extends Element> planElements = new LinkedList<>(element.getChildren());
+            dependencyStrategyHelper = new DependencyStrategyHelper(Element);
+            List<? extends Element> planElements = new LinkedList<>(Element.getChildren());
             Collections.reverse(planElements);
 
             for (int i = 1; i < planElements.size(); i++) {

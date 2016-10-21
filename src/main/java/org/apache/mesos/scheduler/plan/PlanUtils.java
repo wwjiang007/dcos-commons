@@ -29,9 +29,9 @@ public class PlanUtils {
         elements.forEach(element -> element.forceComplete());
     }
 
-    public static final String getMessage(Element element) {
+    public static final String getMessage(Element Element) {
         return String.format("%s: '%s [%s]' has status: '%s'.",
-                element.getClass().getName(), element.getName(), element.getId(), element.getStatus());
+                Element.getClass().getName(), Element.getName(), Element.getId(), Element.getStatus());
     }
 
     public static final List<String> getErrors(List<String> errors, Collection<? extends Element> elements) {
@@ -79,15 +79,19 @@ public class PlanUtils {
         return result;
     }
 
-    public static boolean allHaveStatus(Status status, Collection<? extends Element> planElements) {
-        return planElements.stream().allMatch(element -> element.getStatus() == status);
+    public static boolean allHaveStatus(Status status, Collection<? extends Element> elements) {
+        return elements.stream().allMatch(element -> element.getStatus() == status);
     }
 
-    public static boolean anyHaveStatus(Status status, Collection<? extends Element> planElements) {
-        return planElements.stream().anyMatch(element -> element.getStatus() == status);
+    public static boolean anyHaveStatus(Status status, Collection<? extends Element> elements) {
+        return elements.stream().anyMatch(element -> element.getStatus() == status);
     }
 
     public static List<Offer> filterAcceptedOffers(List<Offer> offers, Collection<OfferID> acceptedOfferIds) {
         return offers.stream().filter(offer -> !acceptedOfferIds.contains(offer.getId())).collect(Collectors.toList());
+    }
+
+    public static void setStatus(List<? extends Element> elements, Status status) {
+        elements.forEach(element -> element.setStatus(status));
     }
 }
