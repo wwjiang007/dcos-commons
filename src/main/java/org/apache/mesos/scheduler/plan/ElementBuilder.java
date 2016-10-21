@@ -9,6 +9,7 @@ import java.util.Collection;
  * An ElementBuilder allows the construction of a composite element such that the description of dependencies constructs
  * a custom {@link Strategy}.
  *
+ * @param <P> is the type of the parent {@link Element} which should be built.
  * @param <C> is the type of {@link Element}s to which the Strategy applies.
  */
 public abstract class ElementBuilder<P extends Element<C>, C extends Element> {

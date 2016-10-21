@@ -29,9 +29,9 @@ public class PlanUtils {
         elements.forEach(element -> element.forceComplete());
     }
 
-    public static final String getMessage(Element Element) {
+    public static final String getMessage(Element element) {
         return String.format("%s: '%s [%s]' has status: '%s'.",
-                Element.getClass().getName(), Element.getName(), Element.getId(), Element.getStatus());
+                element.getClass().getName(), element.getName(), element.getId(), element.getStatus());
     }
 
     public static final List<String> getErrors(List<String> errors, Collection<? extends Element> elements) {

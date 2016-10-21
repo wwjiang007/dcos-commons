@@ -19,6 +19,16 @@ public class TestTaskSetFactory {
     public static final double DISK = 2000.0;
     public static final Protos.CommandInfo CMD = Protos.CommandInfo.newBuilder().setValue("echo test-cmd").build();
 
+    public static TaskSet getTaskSet(String name, int count) {
+        return getTaskSet(
+                name,
+                count,
+                CMD.getValue(),
+                CPU,
+                MEM,
+                DISK);
+    }
+
     public static TaskSet getTaskSet() {
         return getTaskSet(
                 NAME,
