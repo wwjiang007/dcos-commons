@@ -322,29 +322,6 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         return resources;
     }
 
-    private static void setHealthCheck(Protos.TaskInfo.Builder taskInfo, TaskSpec taskSpec) {
-        if (!taskSpec.getHealthCheck().isPresent()) {
-            LOGGER.debug("No health checks defined for taskSpec: {}", taskSpec.getName());
-            return;
-        }
-
-        HealthCheckSpec healthCheckSpec = taskSpec.getHealthCheck().get();
-        taskInfo.getHealthCheckBuilder()
-                .setDelaySeconds(healthCheckSpec.getDelay())
-                .setIntervalSeconds(healthCheckSpec.getInterval())
-                .setTimeoutSeconds(healthCheckSpec.getTimeout())
-                .setConsecutiveFailures(healthCheckSpec.getMaxConsecutiveFailures())
-                .setGracePeriodSeconds(healthCheckSpec.getGracePeriod());
-
-        Protos.CommandInfo.Builder healthCheckCommandBuilder = taskInfo.getHealthCheckBuilder().getCommandBuilder()
-                .setValue(healthCheckSpec.getCommand());
-        if (taskSpec.getCommand().isPresent()) {
-            healthCheckCommandBuilder.setEnvironment(
-                    CommonTaskUtils.fromMapToEnvironment(
-                            taskSpec.getCommand().get().getEnvironment()));
-        }
-    }
-
     /**
      * Returns the ExecutorInfo of a PodInstance if it is still running so it may be re-used, otherwise
      * it returns a new ExedcutorInfo.
@@ -427,5 +404,28 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         }
 
         return executorInfoBuilder.build();
+    }
+
+    private static void setHealthCheck(Protos.TaskInfo.Builder taskInfo, TaskSpec taskSpec) {
+        if (!taskSpec.getHealthCheck().isPresent()) {
+            LOGGER.debug("No health checks defined for taskSpec: {}", taskSpec.getName());
+            return;
+        }
+
+        HealthCheckSpec healthCheckSpec = taskSpec.getHealthCheck().get();
+        taskInfo.getHealthCheckBuilder()
+                .setDelaySeconds(healthCheckSpec.getDelay())
+                .setIntervalSeconds(healthCheckSpec.getInterval())
+                .setTimeoutSeconds(healthCheckSpec.getTimeout())
+                .setConsecutiveFailures(healthCheckSpec.getMaxConsecutiveFailures())
+                .setGracePeriodSeconds(healthCheckSpec.getGracePeriod());
+
+        Protos.CommandInfo.Builder healthCheckCommandBuilder = taskInfo.getHealthCheckBuilder().getCommandBuilder()
+                .setValue(healthCheckSpec.getCommand());
+        if (taskSpec.getCommand().isPresent()) {
+            healthCheckCommandBuilder.setEnvironment(
+                    CommonTaskUtils.fromMapToEnvironment(
+                            taskSpec.getCommand().get().getEnvironment()));
+        }
     }
 }
