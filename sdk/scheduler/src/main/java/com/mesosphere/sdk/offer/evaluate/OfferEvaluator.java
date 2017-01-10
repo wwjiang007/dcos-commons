@@ -101,6 +101,15 @@ public class OfferEvaluator {
             evaluationPipeline.add(new ExecutorEvaluationStage());
         }
 
+        if (offerRequirement.getExecutorRequirementOptional().isPresent()) {
+            ExecutorRequirement executorRequirement = offerRequirement.getExecutorRequirementOptional().get();
+            Collection<ResourceEvaluationStage> evaluationStages =
+                    executorRequirement.getResourceRequirements().stream()
+                    .map(resourceRequirement -> new ResourceEvaluationStage(resourceRequirement))
+                    .collect(Collectors.toList());
+            evaluationPipeline.addAll(evaluationStages);
+        }
+
         Set<String> tasksToLaunch = Stream.concat(
                 podInstanceRequirement.getPodInstance().getPod().getTasks().stream()
                         .filter(t -> podInstanceRequirement.getTasksToLaunch().contains(t.getName()))
@@ -125,6 +134,7 @@ public class OfferEvaluator {
                 evaluationPipeline.add(new LaunchEvaluationStage(taskName));
             }
         }
+
         evaluationPipeline.add(new ReservationEvaluationStage(offerRequirement.getResourceIds()));
 
         return evaluationPipeline;

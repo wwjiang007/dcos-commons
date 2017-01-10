@@ -4,11 +4,13 @@ api-port: {{PORT0}}
 pods:
   pod-type:
     container:
-      image-name: ubuntu-latest
+      image-name: ubuntu:14.04
       volumes:
         - mode: RW
           container-path: /data
           host-path: persistent-volume/data
+          size: 50
+          type: ROOT
     count: 1
     tasks:
       test-task:

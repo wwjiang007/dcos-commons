@@ -91,6 +91,7 @@ public class DefaultOfferRequirementProviderTest {
         Assert.assertNotNull(offerRequirement);
         Assert.assertEquals(TestConstants.POD_TYPE, offerRequirement.getType());
         Assert.assertEquals(1, offerRequirement.getTaskRequirements().size());
+        Assert.assertEquals(1, offerRequirement.getExecutorRequirementOptional().get().getExecutorInfo().getResourcesCount());
 
         TaskRequirement taskRequirement = offerRequirement.getTaskRequirements().stream().findFirst().get();
         TaskInfo taskInfo = taskRequirement.getTaskInfo();

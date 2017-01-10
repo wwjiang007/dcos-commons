@@ -44,6 +44,11 @@ public class ResourceEvaluationStage implements OfferEvaluationStage {
         this(resource, null);
     }
 
+    public ResourceEvaluationStage(ResourceRequirement resourceRequirement) {
+        this.resourceRequirement = resourceRequirement;
+        this.taskName = null;
+    }
+
     protected void setResourceRequirement(ResourceRequirement resourceRequirement) {
         this.resourceRequirement = resourceRequirement;
     }

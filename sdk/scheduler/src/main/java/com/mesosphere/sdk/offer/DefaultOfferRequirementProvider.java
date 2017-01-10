@@ -315,7 +315,14 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
             resources.add(ResourceUtils.getDesiredResource(resourceSpec));
         }
 
-        for (VolumeSpec volumeSpec : resourceSet.getVolumes()) {
+        resources.addAll(getVolumeResources(resourceSet.getVolumes()));
+
+        return coalesceResources(resources);
+    }
+
+    private static Collection<Protos.Resource> getVolumeResources(Collection<VolumeSpec> volumeSpecs) {
+        Collection<Protos.Resource> resources = new ArrayList<>();
+        for (VolumeSpec volumeSpec : volumeSpecs) {
             switch (volumeSpec.getType()) {
                 case ROOT:
                     resources.add(
@@ -338,7 +345,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
             }
         }
 
-        return coalesceResources(resources);
+        return resources;
     }
 
     private static List<Protos.Resource> coalesceResources(Collection<Protos.Resource> resources) {
@@ -403,15 +410,31 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
     private Protos.ExecutorInfo getExecutor(PodInstance podInstance) {
         List<Protos.TaskInfo> podTasks = TaskUtils.getPodTasks(podInstance, stateStore);
 
+        // Use a currently running executor.
         for (Protos.TaskInfo taskInfo : podTasks) {
             Optional<Protos.TaskStatus> taskStatusOptional = stateStore.fetchStatus(taskInfo.getName());
             if (taskStatusOptional.isPresent()
                     && taskStatusOptional.get().getState() == Protos.TaskState.TASK_RUNNING) {
                 LOGGER.info(
-                        "Reusing executor from task '{}': {}",
+                        "Reusing running executor from task '{}': {}",
                         taskInfo.getName(),
                         TextFormat.shortDebugString(taskInfo.getExecutor()));
                 return taskInfo.getExecutor();
+            }
+        }
+
+        // Use a previously launched executor.
+        for (Protos.TaskInfo taskInfo : podTasks) {
+            Optional<Protos.TaskStatus> taskStatusOptional = stateStore.fetchStatus(taskInfo.getName());
+            if (taskStatusOptional.isPresent() && taskInfo.hasExecutor()) {
+                LOGGER.info(
+                        "Reusing exited executor from task '{}': {}",
+                        taskInfo.getName(),
+                        TextFormat.shortDebugString(taskInfo.getExecutor()));
+                return taskInfo.getExecutor().toBuilder()
+                        .setExecutorId(Protos.ExecutorID.newBuilder()
+                                .setValue(""))
+                        .build();
             }
         }
 
@@ -453,12 +476,10 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
     }
 
     private static Protos.Volume.Mode getMode(String mode) {
-        switch (mode) {
+        switch (mode.toUpperCase()) {
             case "RW":
-            case "rw":
                 return Protos.Volume.Mode.RW;
             case "RO":
-            case "ro":
                 return Protos.Volume.Mode.RO;
             default:
                 return Protos.Volume.Mode.RW;
@@ -484,6 +505,59 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         return rLimitInfoBuilder.build();
     }
 
+    private static List<VolumeSpec> getExecutorVolumeSpecs(PodSpec podSpec) {
+        if (!podSpec.getContainer().isPresent()) {
+            return Collections.emptyList();
+        }
+
+        Optional<ResourceSpec> resourceSpecOptional = getFirstResource(podSpec);
+        if (!resourceSpecOptional.isPresent()) {
+            return Collections.emptyList();
+        }
+
+        String role = resourceSpecOptional.get().getRole();
+        String principal = resourceSpecOptional.get().getPrincipal();
+
+        ContainerSpec containerSpec = podSpec.getContainer().get();
+        List<VolumeSpec> volumeSpecs = new ArrayList<>();
+        for (ContainerVolume containerVolume : containerSpec.getVolumes()) {
+            volumeSpecs.add(new DefaultVolumeSpec(
+                    containerVolume.getSize(),
+                    getType(containerVolume.getType()),
+                    containerVolume.getHostPath(),
+                    role,
+                    principal,
+                    ""));
+        }
+
+        return volumeSpecs;
+    }
+
+    private static Optional<ResourceSpec> getFirstResource(PodSpec podSpec) {
+        Optional<ResourceSet> resourceSet = podSpec.getResources().stream().findAny();
+        if (resourceSet.isPresent()) {
+            return resourceSet.get().getResources().stream().findAny();
+        } else {
+            Optional<TaskSpec> taskSpecOptional = podSpec.getTasks().stream().findAny();
+            if (taskSpecOptional.isPresent()) {
+                return taskSpecOptional.get().getResourceSet().getResources().stream().findAny();
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private static VolumeSpec.Type getType(String type) {
+        switch (type.toUpperCase()) {
+            case "ROOT":
+                return VolumeSpec.Type.ROOT;
+            case "MOUNT":
+                return VolumeSpec.Type.MOUNT;
+            default:
+                return VolumeSpec.Type.ROOT;
+        }
+    }
+
     private static Protos.ExecutorInfo getNewExecutorInfo(PodSpec podSpec) throws IllegalStateException {
         Protos.ExecutorInfo.Builder executorInfoBuilder = Protos.ExecutorInfo.newBuilder()
                 .setName(podSpec.getType())
@@ -491,6 +565,16 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
 
         if (podSpec.getContainer().isPresent()) {
             executorInfoBuilder.setContainer(getContainerInfo(podSpec.getContainer().get()));
+        }
+
+        List<VolumeSpec> volumeSpecs = getExecutorVolumeSpecs(podSpec);
+        LOGGER.info("Found {} executor volumeSpecs.", volumeSpecs.size());
+        Collection<Protos.Resource> volumeResources = getVolumeResources(volumeSpecs);
+        LOGGER.info("Found {} executor volumeResources.", volumeResources.size());
+
+        if (volumeResources.size() > 0) {
+            LOGGER.info("Adding volume resources to ExecutorInfo.");
+            executorInfoBuilder.addAllResources(volumeResources);
         }
 
         // command and user:
