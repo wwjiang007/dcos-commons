@@ -128,7 +128,8 @@ public class YAMLToInternalMappers {
                 .tasks(taskSpecs)
                 .type(podName)
                 .user(rawPod.getUser())
-                .resources(resourceSets);
+                .resources(resourceSets)
+                .sticky(rawPod.isSticky());
 
         PlacementRule placementRule = MarathonConstraintParser.parse(rawPod.getPlacement());
         if (!(placementRule instanceof PassthroughRule)) {

@@ -39,6 +39,9 @@ public interface PodSpec {
     @JsonProperty("placement-rule")
     Optional<PlacementRule> getPlacementRule();
 
+    @JsonProperty("sticky")
+    boolean isSticky();
+
     @JsonIgnore
     static String getName(PodSpec podSpec, int index) {
         return podSpec.getType() + "-" + index;

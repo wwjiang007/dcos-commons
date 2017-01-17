@@ -46,8 +46,10 @@ public class DefaultPodSpec implements PodSpec {
     private Collection<ResourceSet> resources;
     @Valid
     private Collection<URI> uris;
+    private boolean isSticky;
 
     @JsonCreator
+    @SuppressWarnings({"PMD.SimplifiedTernary"})
     public DefaultPodSpec(
             @JsonProperty("type") String type,
             @JsonProperty("user") String user,
@@ -56,7 +58,8 @@ public class DefaultPodSpec implements PodSpec {
             @JsonProperty("uris") Collection<URI> uris,
             @JsonProperty("task-specs") List<TaskSpec> tasks,
             @JsonProperty("placement-rule") PlacementRule placementRule,
-            @JsonProperty("resource-sets") Collection<ResourceSet> resources) {
+            @JsonProperty("resource-sets") Collection<ResourceSet> resources,
+            @JsonProperty("sticky") Boolean isSticky) {
         this.type = type;
         this.user = user;
         this.count = count;
@@ -65,12 +68,21 @@ public class DefaultPodSpec implements PodSpec {
         this.tasks = tasks;
         this.placementRule = placementRule;
         this.resources = resources;
+        this.isSticky =  isSticky == null ? false : isSticky;
+        ValidationUtils.validate(this);
     }
 
     private DefaultPodSpec(Builder builder) {
-        this(builder.type, builder.user, builder.count, builder.container,
-                builder.uris, builder.tasks, builder.placementRule, builder.resources);
-        ValidationUtils.validate(this);
+        this(
+                builder.type,
+                builder.user,
+                builder.count,
+                builder.container,
+                builder.uris,
+                builder.tasks,
+                builder.placementRule,
+                builder.resources,
+                builder.isSticky);
     }
 
     public static Builder newBuilder() {
@@ -134,6 +146,11 @@ public class DefaultPodSpec implements PodSpec {
     }
 
     @Override
+    public boolean isSticky() {
+        return isSticky;
+    }
+
+    @Override
     public boolean equals(Object o) {
         return EqualsBuilder.reflectionEquals(this, o);
     }
@@ -156,6 +173,7 @@ public class DefaultPodSpec implements PodSpec {
         private List<TaskSpec> tasks = new ArrayList<>();
         private PlacementRule placementRule;
         private Collection<ResourceSet> resources;
+        private Boolean isSticky;
 
         private Builder() {
         }
@@ -262,8 +280,25 @@ public class DefaultPodSpec implements PodSpec {
             return this;
         }
 
+        /**
+         * Sets the {@code ResourceSet}s associated with this PodSpec and returns a reference to this Builder so that
+         * the methods can be chained together.
+         * @param resources the {@code ResourceSet}s to set
+         * @return a reference to this Builder
+         */
         public Builder resources(Collection<ResourceSet> resources) {
             this.resources = resources;
+            return this;
+        }
+
+        /**
+         * Sets the stickiness of this Pod and returns a reference to this Builder so that the methods can be chained
+         * together.
+         * @param isSticky the stickiness state
+         * @return a reference to this Builder
+         */
+        public Builder sticky(Boolean isSticky) {
+            this.isSticky = isSticky;
             return this;
         }
 

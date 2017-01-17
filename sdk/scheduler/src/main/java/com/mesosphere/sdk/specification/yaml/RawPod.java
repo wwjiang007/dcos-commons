@@ -20,6 +20,7 @@ public class RawPod {
     private final Collection<String> uris;
     private final WriteOnceLinkedHashMap<String, RawTask> tasks;
     private final WriteOnceLinkedHashMap<String, RawResourceSet> resourceSets;
+    private final Boolean isSticky;
 
     private RawPod(
             @JsonProperty("resource-sets") WriteOnceLinkedHashMap<String, RawResourceSet> resourceSets,
@@ -29,7 +30,8 @@ public class RawPod {
             @JsonProperty("strategy") String strategy,
             @JsonProperty("uris") Collection<String> uris,
             @JsonProperty("tasks") WriteOnceLinkedHashMap<String, RawTask> tasks,
-            @JsonProperty("user") String user) {
+            @JsonProperty("user") String user,
+            @JsonProperty("sticky") Boolean isSticky) {
         this.placement = placement;
         this.count = count;
         this.container = container;
@@ -38,6 +40,7 @@ public class RawPod {
         this.uris = uris;
         this.tasks = tasks;
         this.resourceSets = resourceSets;
+        this.isSticky = isSticky;
     }
 
     public WriteOnceLinkedHashMap<String, RawResourceSet> getResourceSets() {
@@ -70,5 +73,9 @@ public class RawPod {
 
     public String getUser() {
         return user;
+    }
+
+    public Boolean isSticky() {
+        return isSticky;
     }
 }
