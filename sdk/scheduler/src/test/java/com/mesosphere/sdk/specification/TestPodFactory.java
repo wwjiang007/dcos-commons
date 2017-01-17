@@ -76,6 +76,7 @@ public class TestPodFactory {
                 .count(count)
                 .resources(Arrays.asList(resourceSet))
                 .tasks(Arrays.asList(taskSpec))
+                .sticky(true)
                 .build();
     }
 
