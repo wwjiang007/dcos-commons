@@ -1,10 +1,12 @@
 package com.mesosphere.sdk.scheduler.recovery.monitor;
 
+import com.mesosphere.sdk.config.ConfigStore;
+import com.mesosphere.sdk.scheduler.recovery.FailureUtils;
+import com.mesosphere.sdk.specification.ServiceSpec;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
-import com.mesosphere.sdk.scheduler.recovery.FailureUtils;
 
 import java.time.Duration;
 import java.util.Date;
@@ -34,7 +36,8 @@ public class TimedFailureMonitor extends DefaultFailureMonitor {
      * @param durationUntilFailed The minimum amount of time which must pass before a stopped Task can be considered
      *                            failed.
      */
-    public TimedFailureMonitor(Duration durationUntilFailed) {
+    public TimedFailureMonitor(ConfigStore<ServiceSpec> configStore, Duration durationUntilFailed) {
+        super(configStore);
         this.firstFailureDetected = new HashMap<>();
         this.durationUntilFailed = durationUntilFailed;
     }
@@ -46,32 +49,32 @@ public class TimedFailureMonitor extends DefaultFailureMonitor {
      * The first time a task is noticed to be failed, we record that time into a map, keyed by the task's {@link
      * TaskID}. Then, we return true if at least the configured amount of time has passed since then.
      *
-     * @param terminatedTask The task that stopped and might be failed
+     * @param taskInfo The task that stopped and might be failed
      * @return true if the task has been stopped for at least the configured interval
      */
     @Override
-    public boolean hasFailed(TaskInfo terminatedTask) {
-        if (super.hasFailed(terminatedTask)) {
+    public boolean hasFailed(TaskInfo taskInfo) {
+        if (super.hasFailed(taskInfo)) {
             return true;
         }
 
         Date taskLaunchedTime;
         synchronized (firstFailureDetected) {
-            if (!firstFailureDetected.containsKey(terminatedTask.getTaskId())) {
-                firstFailureDetected.put(terminatedTask.getTaskId(), new Date());
+            if (!firstFailureDetected.containsKey(taskInfo.getTaskId())) {
+                firstFailureDetected.put(taskInfo.getTaskId(), new Date());
             }
-            taskLaunchedTime = firstFailureDetected.get(terminatedTask.getTaskId());
+            taskLaunchedTime = firstFailureDetected.get(taskInfo.getTaskId());
         }
 
         Date taskExpiredTime = new Date(taskLaunchedTime.getTime() + durationUntilFailed.toMillis());
         Date now = new Date();
-        log.info("Looking at " + terminatedTask.getName() + " launchHappened at " + taskLaunchedTime + ", expires at "
+        log.info("Looking at " + taskInfo.getName() + " launchHappened at " + taskLaunchedTime + ", expires at "
                 + taskExpiredTime + " which is " + now.after(taskExpiredTime));
 
         if (now.after(taskExpiredTime)) {
-            FailureUtils.markFailed(terminatedTask);
+            FailureUtils.markFailed(taskInfo);
         }
 
-        return super.hasFailed(terminatedTask);
+        return super.hasFailed(taskInfo);
     }
 }

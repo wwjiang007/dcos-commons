@@ -109,7 +109,7 @@ public class TaskUtils {
 
         List<TaskInfo> tasksShouldBeRunning = new ArrayList<>();
         for (TaskInfo taskInfo : podTasks) {
-            Optional<TaskSpec> taskSpecOptional = TaskUtils.getTaskSpec(taskInfo, podInstance);
+            Optional<TaskSpec> taskSpecOptional = TaskUtils.getTaskSpec(podInstance, taskInfo);
 
             if (taskSpecOptional.isPresent() && taskSpecOptional.get().getGoal().equals(GoalState.RUNNING)) {
                 tasksShouldBeRunning.add(taskInfo);
@@ -119,7 +119,13 @@ public class TaskUtils {
         return tasksShouldBeRunning;
     }
 
-    private static Optional<TaskSpec> getTaskSpec(TaskInfo taskInfo, PodInstance podInstance) {
+    public static Optional<TaskSpec> getTaskSpec(PodInstance podInstance, String taskName) {
+        return podInstance.getPod().getTasks().stream()
+                .filter(taskSpec -> TaskSpec.getInstanceName(podInstance, taskSpec).equals(taskName))
+                .findFirst();
+    }
+
+    public static Optional<TaskSpec> getTaskSpec(PodInstance podInstance, TaskInfo taskInfo) {
         for (TaskSpec taskSpec : podInstance.getPod().getTasks()) {
             String taskName = TaskSpec.getInstanceName(podInstance, taskSpec);
             if (taskInfo.getName().equals(taskName)) {
@@ -331,13 +337,6 @@ public class TaskUtils {
             throw new TaskException("Failed to determine the goal state of Task: " + taskName);
         }
     }
-
-    public static Optional<TaskSpec> getTaskSpec(PodInstance podInstance, String taskName) {
-        return podInstance.getPod().getTasks().stream()
-                .filter(taskSpec -> TaskSpec.getInstanceName(podInstance, taskSpec).equals(taskName))
-                .findFirst();
-    }
-
 
     public static Map<PodInstance, List<TaskInfo>> getPodMap(
             ConfigStore<ServiceSpec> configStore,

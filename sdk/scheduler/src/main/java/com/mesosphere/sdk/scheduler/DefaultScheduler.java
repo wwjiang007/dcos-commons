@@ -601,7 +601,7 @@ public class DefaultScheduler implements Scheduler, Observer {
                 configStore,
                 new TimedLaunchConstrainer(Duration.ofMillis(destructiveRecoveryDelayMs)),
                 permanentFailureTimeoutMs.isPresent()
-                        ? new TimedFailureMonitor(Duration.ofMillis(permanentFailureTimeoutMs.get()))
+                        ? new TimedFailureMonitor(configStore, Duration.ofMillis(permanentFailureTimeoutMs.get()))
                         : new NeverFailureMonitor());
     }
 
