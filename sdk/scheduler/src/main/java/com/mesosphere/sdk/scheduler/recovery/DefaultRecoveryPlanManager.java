@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -145,9 +144,6 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
                 .collect(Collectors.toList());
         logger.info("Found pods needing recovery: " + podNames);
 
-        Predicate<Protos.TaskInfo> isPodPermanentlyFailed = t -> (
-                FailureUtils.isLabeledAsFailed(t) || failureMonitor.hasFailed(t));
-
         List<Step> recoverySteps = new ArrayList<>();
         for (Map.Entry<PodInstance, List<Protos.TaskInfo>> failedPod : failedPodsMap.entrySet()) {
 
@@ -197,7 +193,7 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
             // Pods are atomic, even when considering their status as having either permanently or transiently failed.
             // In order for a Pod to be considered permanently failed, all its constituent tasks must have permanently
             // failed.  Otherwise, we will continue to recover from task failures, in place.
-            if (failedTasks.stream().allMatch(isPodPermanentlyFailed)) {
+            if (failedTasks.stream().allMatch(taskInfo -> failureMonitor.hasFailed(taskInfo))) {
                 logger.info("Recovering permanently failed pod: '{}'", podInstance.getName());
                 recoverySteps.add(new DefaultRecoveryStep(
                         TaskUtils.getStepName(podInstance, tasksToLaunch),
@@ -206,7 +202,7 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
                         tasksToLaunch,
                         RecoveryType.PERMANENT,
                         launchConstrainer));
-            } else if (failedTasks.stream().noneMatch(isPodPermanentlyFailed)) {
+            } else if (failedTasks.stream().noneMatch(taskInfo -> failureMonitor.hasFailed(taskInfo))) {
                 logger.info("Recovering transiently failed pod: '{}'", podInstance.getName());
                 recoverySteps.add(new DefaultRecoveryStep(
                         TaskUtils.getStepName(podInstance, tasksToLaunch),

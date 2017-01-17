@@ -351,10 +351,6 @@ public class DefaultRecoveryPlanManagerTest {
         // Verify we launched the task
         verify(offerAccepter, times(1)).accept(any(), recommendationCaptor.capture());
         assertEquals(3, recommendationCaptor.getValue().size());
-
-        // Verify the appropriate task was not checked for failure with failure monitor.
-        verify(failureMonitor, never()).hasFailed(any());
-        reset(mockDeployManager);
     }
 
     /**
