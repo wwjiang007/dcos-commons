@@ -166,7 +166,7 @@ public class DefaultRecoveryPlanManagerTest {
 
         assertEquals(0, acceptedOffers.size());
         // Verify launchConstrainer was used
-        verify(launchConstrainer, times(1)).canLaunch(any());
+        verify(launchConstrainer, times(1)).canLaunch(any(), any());
 
         // Verify that the UI remains stable
         for (int i = 0; i < 10; i++) {
@@ -202,7 +202,7 @@ public class DefaultRecoveryPlanManagerTest {
         assertEquals(1, acceptedOffers.size());
 
         // Verify launchConstrainer was checked before launch
-        verify(launchConstrainer, times(1)).canLaunch(any());
+        verify(launchConstrainer, times(1)).canLaunch(any(), any());
 
         // Verify we ran launching code
         verify(offerAccepter, times(1)).accept(any(), any());

@@ -326,7 +326,135 @@ public class DefaultSchedulerTest {
     }
 
     @Test
-    public void testLaunchAndRecovery() throws Exception {
+    public void testLaunchAndRecoverySticky() throws Exception {
+        // Get first Step associated with Task A-0
+        Plan plan = defaultScheduler.deploymentPlanManager.getPlan();
+        Step stepTaskA0 = plan.getChildren().get(0).getChildren().get(0);
+        Assert.assertTrue(stepTaskA0.isPending());
+
+        // Offer sufficient Resource and wait for its acceptance
+        Protos.Offer offer1 = getSufficientOfferForTaskA();
+        defaultScheduler.resourceOffers(mockSchedulerDriver, Arrays.asList(offer1));
+        verify(mockSchedulerDriver, timeout(1000).times(1)).acceptOffers(
+                collectionThat(contains(offer1.getId())),
+                operationsCaptor.capture(),
+                any());
+
+        Collection<Protos.Offer.Operation> operations = operationsCaptor.getValue();
+        Protos.TaskID launchedTaskId = getTaskId(operations);
+
+        // Sent TASK_RUNNING status
+        statusUpdate(launchedTaskId, Protos.TaskState.TASK_RUNNING);
+
+        // Wait for the Step to become Complete
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilCall(to(stepTaskA0).isComplete(), equalTo(true));
+        Assert.assertEquals(Arrays.asList(Status.COMPLETE, Status.PENDING, Status.PENDING), getStepStatuses(plan));
+
+        // Sent TASK_KILLED status
+        statusUpdate(launchedTaskId, Protos.TaskState.TASK_KILLED);
+
+        reset(mockSchedulerDriver);
+
+        // Make offers sufficient to recover Task A-0 and launch Task B-0,
+        // and also have some unused reserved resources for cleaning, and verify that only one of those three happens.
+        Protos.Resource cpus = ResourceTestUtils.getDesiredCpu(1.0);
+        cpus = ResourceUtils.setResourceId(cpus, UUID.randomUUID().toString());
+        Protos.Resource mem = ResourceTestUtils.getDesiredMem(1.0);
+        mem = ResourceUtils.setResourceId(mem, UUID.randomUUID().toString());
+
+        Protos.Offer offerA = Protos.Offer.newBuilder(getSufficientOfferForTaskA())
+                .addAllResources(operations.stream()
+                        .filter(Protos.Offer.Operation::hasReserve)
+                        .flatMap(operation -> operation.getReserve().getResourcesList().stream())
+                        .collect(Collectors.toList()))
+                .addResources(cpus)
+                .addResources(mem)
+                .build();
+        Protos.Offer offerB = Protos.Offer.newBuilder(getSufficientOfferForTaskB())
+                .addAllResources(operations.stream()
+                        .filter(Protos.Offer.Operation::hasReserve)
+                        .flatMap(operation -> operation.getReserve().getResourcesList().stream())
+                        .collect(Collectors.toList()))
+                .addResources(cpus)
+                .addResources(mem)
+                .build();
+        Protos.Offer offerC = Protos.Offer.newBuilder(getSufficientOfferForTaskB())
+                .addAllResources(operations.stream()
+                        .filter(Protos.Offer.Operation::hasReserve)
+                        .flatMap(operation -> operation.getReserve().getResourcesList().stream())
+                        .collect(Collectors.toList()))
+                .addResources(cpus)
+                .addResources(mem)
+                .build();
+
+        defaultScheduler.resourceOffers(mockSchedulerDriver, Arrays.asList(offerA, offerB, offerC));
+        defaultScheduler.awaitTermination();
+
+        // Verify that acceptOffer is called thrice, once each for recovery, launch, and cleanup.
+        // Use a separate captor as the other one was already used against an acceptOffers call in this test case.
+        verify(mockSchedulerDriver, times(3)).acceptOffers(
+                any(),
+                operationsCaptor2.capture(),
+                any());
+        final List<Collection<Protos.Offer.Operation>> allOperations = operationsCaptor2.getAllValues();
+        Assert.assertEquals(3, allOperations.size());
+        boolean recovery = false;
+        boolean launch = false;
+        boolean unreserve = false;
+
+        for (Collection<Protos.Offer.Operation> operationSet : allOperations) {
+            switch (operationSet.size()) {
+                case 1:
+                    // One LAUNCH operation
+                    if (operationSet.iterator().next().getType()
+                            == Protos.Offer.Operation.Type.LAUNCH) {
+                        recovery = true;
+                    }
+                    break;
+                case 2:
+                    // Two UNRESERVE operations
+                    if (operationSet.stream().allMatch(object -> object.getType()
+                            == Protos.Offer.Operation.Type.UNRESERVE)) {
+                        recovery = true;
+                    }
+                    unreserve = true;
+                    break;
+                case 5:
+                    // Three RESERVE, One CREATE and One LAUNCH operation
+                    int reserveOp = 0;
+                    int createOp = 0;
+                    int launchOp = 0;
+                    for (Protos.Offer.Operation operation : operationSet) {
+                        switch (operation.getType()) {
+                            case RESERVE:
+                                ++reserveOp;
+                                break;
+                            case CREATE:
+                                ++createOp;
+                                break;
+                            case LAUNCH:
+                                ++launchOp;
+                                break;
+                            default:
+                                Assert.assertTrue("Expected RESERVE, CREATE, or LAUNCH, got " + operation.getType(), false);
+                        }
+                    }
+                    if (reserveOp == 3 && createOp == 1 && launchOp == 1) {
+                        launch = true;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        Assert.assertTrue(recovery);
+        Assert.assertTrue(launch);
+        Assert.assertTrue(unreserve);
+    }
+
+    @Test
+    public void testLaunchAndRecoveryNonSticky() throws Exception {
         // Get first Step associated with Task A-0
         Plan plan = defaultScheduler.deploymentPlanManager.getPlan();
         Step stepTaskA0 = plan.getChildren().get(0).getChildren().get(0);

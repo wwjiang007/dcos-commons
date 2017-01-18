@@ -1,5 +1,6 @@
 package com.mesosphere.sdk.scheduler.recovery.constrain;
 
+import com.mesosphere.sdk.specification.PodInstance;
 import org.apache.mesos.Protos.Offer.Operation;
 import com.mesosphere.sdk.scheduler.recovery.RecoveryType;
 
@@ -20,12 +21,12 @@ public class TestingLaunchConstrainer implements LaunchConstrainer {
     }
 
     @Override
-    public void launchHappened(Operation launchOperation, RecoveryType recoveryType) {
+    public void launchHappened(PodInstance podInstance, Operation launchOperation, RecoveryType recoveryType) {
         // Does nothing when the launch happens
     }
 
     @Override
-    public boolean canLaunch(RecoveryType recoveryType) {
+    public boolean canLaunch(PodInstance podInstance, RecoveryType recoveryType) {
         return this.canLaunch;
     }
 }

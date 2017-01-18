@@ -14,3 +14,13 @@ pods:
         memory: {{HELLO_MEM}}
         env:
           SLEEP_DURATION: {{SLEEP_DURATION}}
+  world:
+    count: {{WORLD_COUNT}}
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: "echo world >> output && sleep $SLEEP_DURATION"
+        cpus: {{WORLD_CPUS}}
+        memory: {{WORLD_MEM}}
+        env:
+          SLEEP_DURATION: {{SLEEP_DURATION}}

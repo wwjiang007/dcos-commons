@@ -18,7 +18,7 @@
           "spec_file" : {
             "description":"The name of the service spec yaml file.",
             "type":"string",
-            "default":"svc.yml"
+            "default":"examples/sticky.yml"
           }
         }
       },

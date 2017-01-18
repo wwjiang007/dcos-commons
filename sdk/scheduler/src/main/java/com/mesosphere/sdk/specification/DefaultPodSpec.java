@@ -68,7 +68,7 @@ public class DefaultPodSpec implements PodSpec {
         this.tasks = tasks;
         this.placementRule = placementRule;
         this.resources = resources;
-        this.isSticky =  isSticky == null ? false : isSticky;
+        this.isSticky =  isSticky == null ? true : isSticky;
         ValidationUtils.validate(this);
     }
 

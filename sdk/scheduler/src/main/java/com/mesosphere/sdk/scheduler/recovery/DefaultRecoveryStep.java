@@ -21,6 +21,7 @@ public class DefaultRecoveryStep extends DeploymentStep {
 
     private final LaunchConstrainer launchConstrainer;
     private final RecoveryType recoveryType;
+    private final PodInstance podInstance;
 
     public DefaultRecoveryStep(
             String name,
@@ -35,6 +36,7 @@ public class DefaultRecoveryStep extends DeploymentStep {
                         PodInstanceRequirement.createPermanentReplacement(podInstance, tasksToLaunch) :
                         PodInstanceRequirement.create(podInstance, tasksToLaunch),
                 Collections.emptyList());
+        this.podInstance = podInstance;
         this.launchConstrainer = launchConstrainer;
         this.recoveryType = recoveryType;
     }
@@ -43,12 +45,16 @@ public class DefaultRecoveryStep extends DeploymentStep {
     public void updateOfferStatus(Collection<Protos.Offer.Operation> operations) {
         super.updateOfferStatus(operations);
         if (CollectionUtils.isNotEmpty(operations)) {
-            launchConstrainer.launchHappened(operations.iterator().next(), recoveryType);
+            launchConstrainer.launchHappened(podInstance, operations.iterator().next(), recoveryType);
         }
     }
 
     public RecoveryType getRecoveryType() {
         return recoveryType;
+    }
+
+    public PodInstance getPodInstance() {
+        return podInstance;
     }
 
     @Override

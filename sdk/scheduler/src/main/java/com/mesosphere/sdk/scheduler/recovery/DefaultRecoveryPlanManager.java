@@ -78,7 +78,9 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
             updatePlan(dirtyAssets);
             return PlanUtils.getCandidates(getPlan(), dirtyAssets).stream()
                     .filter(step ->
-                            launchConstrainer.canLaunch(((DefaultRecoveryStep) step).getRecoveryType()))
+                            launchConstrainer.canLaunch(
+                                    ((DefaultRecoveryStep) step).getPodInstance(),
+                                    ((DefaultRecoveryStep) step).getRecoveryType()))
                     .collect(Collectors.toList());
         }
     }

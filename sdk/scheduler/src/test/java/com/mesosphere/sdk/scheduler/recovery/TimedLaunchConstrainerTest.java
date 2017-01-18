@@ -1,11 +1,17 @@
 package com.mesosphere.sdk.scheduler.recovery;
 
 import com.mesosphere.sdk.scheduler.recovery.constrain.TimedLaunchConstrainer;
+import com.mesosphere.sdk.specification.PodInstance;
+import com.mesosphere.sdk.specification.PodSpec;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
+
+import static org.mockito.Mockito.when;
 
 /**
  * This class tests the TimedLaunchConstrainer class.
@@ -13,6 +19,9 @@ import java.time.Duration;
 public class TimedLaunchConstrainerTest {
     private static final Duration MIN_DELAY = Duration.ofMillis(3000);
     private TimedLaunchConstrainer timedLaunchConstrainer;
+
+    @Mock private PodInstance podInstance;
+    @Mock private PodSpec podSpec;
 
     private static class TestTimedLaunchConstrainer extends TimedLaunchConstrainer {
         private long currentTime;
@@ -34,6 +43,9 @@ public class TimedLaunchConstrainerTest {
 
     @Before
     public void beforeEach() {
+        MockitoAnnotations.initMocks(this);
+        when(podSpec.isSticky()).thenReturn(true);
+        when(podInstance.getPod()).thenReturn(podSpec);
         timedLaunchConstrainer = new TimedLaunchConstrainer(MIN_DELAY);
     }
 
@@ -44,65 +56,65 @@ public class TimedLaunchConstrainerTest {
 
     @Test
     public void testCanLaunchNoneAfterNoRecovery() {
-        timedLaunchConstrainer.launchHappened(null, RecoveryType.NONE);
-        Assert.assertTrue(timedLaunchConstrainer.canLaunch(RecoveryType.NONE));
+        timedLaunchConstrainer.launchHappened(podInstance, null, RecoveryType.NONE);
+        Assert.assertTrue(timedLaunchConstrainer.canLaunch(podInstance, RecoveryType.NONE));
     }
 
     @Test
     public void testCanLaunchTransientAfterNoRecovery() {
-        timedLaunchConstrainer.launchHappened(null, RecoveryType.NONE);
-        Assert.assertTrue(timedLaunchConstrainer.canLaunch(RecoveryType.TRANSIENT));
+        timedLaunchConstrainer.launchHappened(podInstance, null, RecoveryType.NONE);
+        Assert.assertTrue(timedLaunchConstrainer.canLaunch(podInstance, RecoveryType.TRANSIENT));
     }
 
     @Test
     public void testCanLaunchPermanentAfterNoRecovery() {
-        timedLaunchConstrainer.launchHappened(null, RecoveryType.NONE);
-        Assert.assertTrue(timedLaunchConstrainer.canLaunch(RecoveryType.PERMANENT));
+        timedLaunchConstrainer.launchHappened(podInstance, null, RecoveryType.NONE);
+        Assert.assertTrue(timedLaunchConstrainer.canLaunch(podInstance, RecoveryType.PERMANENT));
     }
 
     @Test
     public void testCanLaunchNoneAfterTransientRecovery() {
-        timedLaunchConstrainer.launchHappened(null, RecoveryType.TRANSIENT);
-        Assert.assertTrue(timedLaunchConstrainer.canLaunch(RecoveryType.NONE));
+        timedLaunchConstrainer.launchHappened(podInstance, null, RecoveryType.TRANSIENT);
+        Assert.assertTrue(timedLaunchConstrainer.canLaunch(podInstance, RecoveryType.NONE));
     }
 
     @Test
     public void testCanLaunchPermanentAfterTransientRecovery() {
-        timedLaunchConstrainer.launchHappened(null, RecoveryType.TRANSIENT);
-        Assert.assertTrue(timedLaunchConstrainer.canLaunch(RecoveryType.PERMANENT));
+        timedLaunchConstrainer.launchHappened(podInstance, null, RecoveryType.TRANSIENT);
+        Assert.assertTrue(timedLaunchConstrainer.canLaunch(podInstance, RecoveryType.PERMANENT));
     }
 
     @Test
     public void testCanLaunchTransientAfterTransientRecovery() {
-        timedLaunchConstrainer.launchHappened(null, RecoveryType.TRANSIENT);
-        Assert.assertTrue(timedLaunchConstrainer.canLaunch(RecoveryType.TRANSIENT));
+        timedLaunchConstrainer.launchHappened(podInstance, null, RecoveryType.TRANSIENT);
+        Assert.assertTrue(timedLaunchConstrainer.canLaunch(podInstance, RecoveryType.TRANSIENT));
     }
 
     @Test
     public void testCanLaunchNoneAfterPermanentRecovery() {
-        timedLaunchConstrainer.launchHappened(null, RecoveryType.PERMANENT);
-        Assert.assertTrue(timedLaunchConstrainer.canLaunch(RecoveryType.NONE));
+        timedLaunchConstrainer.launchHappened(podInstance, null, RecoveryType.PERMANENT);
+        Assert.assertTrue(timedLaunchConstrainer.canLaunch(podInstance, RecoveryType.NONE));
     }
 
     @Test
     public void testCanLaunchTransientAfterPermanentRecovery() {
-        timedLaunchConstrainer.launchHappened(null, RecoveryType.PERMANENT);
-        Assert.assertTrue(timedLaunchConstrainer.canLaunch(RecoveryType.TRANSIENT));
+        timedLaunchConstrainer.launchHappened(podInstance, null, RecoveryType.PERMANENT);
+        Assert.assertTrue(timedLaunchConstrainer.canLaunch(podInstance, RecoveryType.TRANSIENT));
     }
 
     @Test
     public void testCannotLaunchPermanentAfterPermanentRecovery() {
-        timedLaunchConstrainer.launchHappened(null, RecoveryType.PERMANENT);
-        Assert.assertFalse(timedLaunchConstrainer.canLaunch(RecoveryType.PERMANENT));
+        timedLaunchConstrainer.launchHappened(podInstance, null, RecoveryType.PERMANENT);
+        Assert.assertFalse(timedLaunchConstrainer.canLaunch(podInstance, RecoveryType.PERMANENT));
     }
 
     @Test
     public void testCanLaunchAfterPermanentRecoveryAndDelay() throws InterruptedException {
         TestTimedLaunchConstrainer testTimedLaunchConstrainer = new TestTimedLaunchConstrainer(MIN_DELAY);
-        testTimedLaunchConstrainer.launchHappened(null, RecoveryType.PERMANENT);
+        testTimedLaunchConstrainer.launchHappened(podInstance, null, RecoveryType.PERMANENT);
         testTimedLaunchConstrainer.setCurrentTime(System.currentTimeMillis());
-        Assert.assertFalse(testTimedLaunchConstrainer.canLaunch(RecoveryType.PERMANENT));
+        Assert.assertFalse(testTimedLaunchConstrainer.canLaunch(podInstance, RecoveryType.PERMANENT));
         testTimedLaunchConstrainer.setCurrentTime(testTimedLaunchConstrainer.getCurrentTimeMs() + MIN_DELAY.toMillis() * 1000 + 1);
-        Assert.assertTrue(testTimedLaunchConstrainer.canLaunch(RecoveryType.PERMANENT));
+        Assert.assertTrue(testTimedLaunchConstrainer.canLaunch(podInstance, RecoveryType.PERMANENT));
     }
 }

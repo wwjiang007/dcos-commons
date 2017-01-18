@@ -1,5 +1,6 @@
 package com.mesosphere.sdk.scheduler.recovery.constrain;
 
+import com.mesosphere.sdk.specification.PodInstance;
 import org.apache.mesos.Protos.Offer.Operation;
 import com.mesosphere.sdk.scheduler.recovery.RecoveryType;
 
@@ -19,7 +20,7 @@ public interface LaunchConstrainer {
      * @param launchOperation The Launch Operation which occurred.
      * @param recoveryType The type of the recovery which has been executed.
      */
-    void launchHappened(Operation launchOperation, RecoveryType recoveryType);
+    void launchHappened(PodInstance podInstance, Operation launchOperation, RecoveryType recoveryType);
 
     /**
      * Determines whether the given {@link RecoveryType}
@@ -28,5 +29,5 @@ public interface LaunchConstrainer {
      * @param recoveryType The {@link RecoveryType} to be examined.
      * @return True if the offer is safe to launch immediately, false if it should wait
      */
-    boolean canLaunch(RecoveryType recoveryType);
+    boolean canLaunch(PodInstance podInstance, RecoveryType recoveryType);
 }

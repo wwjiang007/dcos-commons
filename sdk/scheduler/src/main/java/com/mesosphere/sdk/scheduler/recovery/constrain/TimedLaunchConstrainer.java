@@ -1,5 +1,6 @@
 package com.mesosphere.sdk.scheduler.recovery.constrain;
 
+import com.mesosphere.sdk.specification.PodInstance;
 import org.apache.mesos.Protos.Offer.Operation;
 import com.mesosphere.sdk.scheduler.recovery.RecoveryType;
 import org.slf4j.Logger;
@@ -30,8 +31,8 @@ public class TimedLaunchConstrainer implements LaunchConstrainer {
     }
 
     @Override
-    public void launchHappened(Operation launchOperation, RecoveryType recoveryType) {
-        if (recoveryType.equals(RecoveryType.PERMANENT)) {
+    public void launchHappened(PodInstance podInstance, Operation launchOperation, RecoveryType recoveryType) {
+        if (recoveryType.equals(RecoveryType.PERMANENT) && podInstance.getPod().isSticky()) {
             lastPermanentRecoveryLaunchMs.compareAndSet(
                     lastPermanentRecoveryLaunchMs.get(),
                     System.currentTimeMillis());
@@ -39,14 +40,15 @@ public class TimedLaunchConstrainer implements LaunchConstrainer {
     }
 
     @Override
-    public boolean canLaunch(RecoveryType recoveryType) {
-        if (recoveryType.equals(RecoveryType.PERMANENT)) {
+    public boolean canLaunch(PodInstance podInstance, RecoveryType recoveryType) {
+        if (recoveryType.equals(RecoveryType.PERMANENT) && podInstance.getPod().isSticky()) {
             Long timeLeft = lastPermanentRecoveryLaunchMs.get() + minDelay.toMillis() - getCurrentTimeMs();
             if (timeLeft < 0) {
                 return true;
             } else {
                 Long secondsLeft = (long) Math.ceil(timeLeft / 1000.0);
-                logger.info("Refusing to launch task for another " + secondsLeft + "s.");
+                logger.info("Refusing to launch pod: {}. Throttling for another {}s.",
+                        podInstance.getName(), secondsLeft);
                 return false;
             }
         } else {
