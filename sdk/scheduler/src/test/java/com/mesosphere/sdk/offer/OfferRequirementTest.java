@@ -11,7 +11,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.UUID;
 
 public class OfferRequirementTest {
@@ -92,7 +91,7 @@ public class OfferRequirementTest {
         TaskInfo taskInfo = TaskTestUtils.getTaskInfo(cpu);
         ExecutorInfo execInfo = TaskTestUtils.getExecutorInfo(cpu);
         OfferRequirement offerRequirement = OfferRequirement.create(
-                "taskType", 0, Arrays.asList(taskInfo), Optional.of(execInfo));
+                "taskType", 0, Arrays.asList(taskInfo), execInfo);
         Resource executorResource = offerRequirement
                 .getExecutorRequirementOptional().get()
                 .getExecutorInfo()

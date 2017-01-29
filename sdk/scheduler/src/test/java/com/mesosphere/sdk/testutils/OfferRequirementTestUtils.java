@@ -49,7 +49,7 @@ public class OfferRequirementTestUtils {
                 TestConstants.TASK_TYPE,
                 0,
                 Arrays.asList(TaskTestUtils.getTaskInfo(resources)),
-                Optional.empty(),
+                null,
                 Optional.of(placementRule));
     }
 

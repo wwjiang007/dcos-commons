@@ -1,6 +1,8 @@
 name: hello-world
 pods:
   hello:
+    container:
+      image-name: ubuntu:latest
     count: {{HELLO_COUNT}}
     placement: {{HELLO_PLACEMENT}}
     tasks:

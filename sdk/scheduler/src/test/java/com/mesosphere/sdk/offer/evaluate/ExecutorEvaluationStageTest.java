@@ -11,7 +11,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.UUID;
 
 public class ExecutorEvaluationStageTest {
@@ -21,19 +20,19 @@ public class ExecutorEvaluationStageTest {
         Protos.Resource expectedExecutorMem = ResourceTestUtils.getExpectedScalar("mem", 256, resourceId);
 
         Protos.TaskInfo taskInfo = TaskTestUtils.getTaskInfo(expectedTaskCpu);
-        Optional<Protos.ExecutorInfo> execInfo = Optional.of(TaskTestUtils.getExecutorInfo(expectedExecutorMem));
+        Protos.ExecutorInfo execInfo = TaskTestUtils.getExecutorInfo(expectedExecutorMem);
 
         // Set incorrect ExecutorID
-        execInfo = Optional.of(Protos.ExecutorInfo.newBuilder(execInfo.get())
-                .setExecutorId(ExecutorUtils.toExecutorId(execInfo.get().getName()))
-                .build());
+        execInfo = Protos.ExecutorInfo.newBuilder(execInfo)
+                .setExecutorId(ExecutorUtils.toExecutorId(execInfo.getName()))
+                .build();
 
         OfferRequirement offerRequirement =
                 OfferRequirement.create(TestConstants.TASK_TYPE, 0, Arrays.asList(taskInfo), execInfo);
         MesosResourcePool resources = new MesosResourcePool(
                 OfferTestUtils.getOffer(Arrays.asList(expectedExecutorMem, expectedTaskCpu)));
 
-        ExecutorEvaluationStage executorEvaluationStage = new ExecutorEvaluationStage(execInfo.get().getExecutorId());
+        ExecutorEvaluationStage executorEvaluationStage = new ExecutorEvaluationStage(execInfo.getExecutorId());
         EvaluationOutcome outcome =
                 executorEvaluationStage.evaluate(resources, offerRequirement, new OfferRecommendationSlate());
         Assert.assertTrue(outcome.isPassing());
@@ -50,7 +49,7 @@ public class ExecutorEvaluationStageTest {
         Protos.ExecutorInfo execInfo = TaskTestUtils.getExistingExecutorInfo(expectedExecutorMem);
 
         OfferRequirement offerRequirement =
-                OfferRequirement.create(TestConstants.TASK_TYPE, 0, Arrays.asList(taskInfo), Optional.of(execInfo));
+                OfferRequirement.create(TestConstants.TASK_TYPE, 0, Arrays.asList(taskInfo), execInfo);
         MesosResourcePool resources = new MesosResourcePool(
                 OfferTestUtils.getOffer(
                         TestConstants.EXECUTOR_ID, Arrays.asList(expectedExecutorMem, expectedTaskCpu)));

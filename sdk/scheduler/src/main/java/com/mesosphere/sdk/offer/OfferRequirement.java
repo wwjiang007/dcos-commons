@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class OfferRequirement {
     private final String type;
     private Map<String, TaskRequirement> taskRequirements;
-    private Optional<ExecutorRequirement> executorRequirementOptional;
+    private ExecutorRequirement executorRequirement;
     private Optional<PlacementRule> placementRuleOptional;
     private final int index;
 
@@ -35,7 +35,7 @@ public class OfferRequirement {
      *
      * @param taskType the task type name from the TaskSet, used for placement filtering
      * @param taskInfos the 'draft' {@link TaskInfo}s from which task requirements should be generated
-     * @param executorInfoOptional the executor from which an executor requirement should be
+     * @param executorInfo the executor from which an executor requirement should be
      *     generated, if any
      * @param placementRuleOptional the placement constraints which should be applied to the tasks, if any
      * @throws InvalidRequirementException if task or executor requirements could not be generated
@@ -45,15 +45,19 @@ public class OfferRequirement {
             String taskType,
             int index,
             Collection<TaskInfo> taskInfos,
-            Optional<ExecutorInfo> executorInfoOptional,
+            ExecutorInfo executorInfo,
             Optional<PlacementRule> placementRuleOptional) throws InvalidRequirementException {
+
+        ExecutorRequirement executorRequirement =
+                executorInfo != null ?
+                        ExecutorRequirement.create(executorInfo) :
+                        null;
+
         return new OfferRequirement(
                 taskType,
                 index,
                 getTaskRequirementsInternal(taskInfos, taskType, index),
-                executorInfoOptional.isPresent() ?
-                        Optional.of(ExecutorRequirement.create(executorInfoOptional.get())) :
-                        Optional.empty(),
+                executorRequirement,
                 placementRuleOptional);
     }
 
@@ -64,30 +68,26 @@ public class OfferRequirement {
             ExecutorRequirement executorRequirement,
             Optional<PlacementRule> placementRuleOptional) {
         return new OfferRequirement(
-                taskType, index, taskRequirements, Optional.of(executorRequirement), placementRuleOptional);
+                taskType, index, taskRequirements, executorRequirement, placementRuleOptional);
     }
 
     /**
      * Creates a new {@link OfferRequirement} with provided executor requirement and empty placement constraints.
-     *
-     * @see #OfferRequirement(String, int, Collection, Optional, Optional)
      */
     public static OfferRequirement create(
             String taskType,
             int index,
             Collection<TaskInfo> taskInfos,
-            Optional<ExecutorInfo> executorInfoOptional) throws InvalidRequirementException {
+            ExecutorInfo executorInfoOptional) throws InvalidRequirementException {
         return create(taskType, index, taskInfos, executorInfoOptional, Optional.empty());
     }
 
     /**
      * Creates a new {@link OfferRequirement} with empty executor requirement and empty placement constraints.
-     *
-     * @see #OfferRequirement(String, int, Collection, Optional, Optional)
      */
     public static OfferRequirement create (String taskType, int index, Collection<TaskInfo> taskInfos)
             throws InvalidRequirementException {
-        return create(taskType, index, taskInfos, Optional.empty(), Optional.empty());
+        return create(taskType, index, taskInfos, null, Optional.empty());
     }
 
     /**
@@ -95,20 +95,20 @@ public class OfferRequirement {
      */
     public OfferRequirement withoutPlacementRules() {
         return new OfferRequirement(
-                type, index, taskRequirements.values(), executorRequirementOptional, Optional.empty());
+                type, index, taskRequirements.values(), executorRequirement, Optional.empty());
     }
 
     private OfferRequirement(
             String type,
             int index,
             Collection<TaskRequirement> taskRequirements,
-            Optional<ExecutorRequirement> executorRequirementOptional,
+            ExecutorRequirement executorRequirement,
             Optional<PlacementRule> placementRuleOptional) {
         this.type = type;
         this.index = index;
         this.taskRequirements = taskRequirements.stream()
                 .collect(Collectors.toMap(t -> t.getTaskInfo().getName(), Function.identity()));
-        this.executorRequirementOptional = executorRequirementOptional;
+        this.executorRequirement = executorRequirement;
         this.placementRuleOptional = placementRuleOptional;
     }
 
@@ -124,14 +124,18 @@ public class OfferRequirement {
         return taskRequirements.get(taskName);
     }
 
+    public Optional<ExecutorRequirement> getExecutorRequirement() {
+        return Optional.ofNullable(executorRequirement);
+    }
+
     public void updateTaskRequirement(String taskName, TaskInfo taskInfo) {
         taskRequirements.get(taskName).update(taskInfo);
     }
 
     public void updateExecutorRequirement(ExecutorInfo executorInfo) {
-        if (executorRequirementOptional.isPresent()) {
+        if (getExecutorRequirementOptional().isPresent()) {
             try {
-                executorRequirementOptional = Optional.of(ExecutorRequirement.create(executorInfo));
+                executorRequirement = ExecutorRequirement.create(executorInfo);
             } catch (InvalidRequirementException e) {
                 // TODO(mrb): Refactor to keep OfferRequirement completely immutable after creation.
                 // In the meantime, we know that creation succeeded previously, and that no operation in the evaluation
@@ -145,7 +149,7 @@ public class OfferRequirement {
     }
 
     public Optional<ExecutorRequirement> getExecutorRequirementOptional() {
-        return executorRequirementOptional;
+        return Optional.ofNullable(executorRequirement);
     }
 
     public Optional<PlacementRule> getPlacementRuleOptional() {
@@ -159,8 +163,8 @@ public class OfferRequirement {
             resources.addAll(taskReq.getTaskInfo().getResourcesList());
         }
 
-        if (executorRequirementOptional.isPresent()) {
-            resources.addAll(executorRequirementOptional.get().getExecutorInfo().getResourcesList());
+        if (getExecutorRequirementOptional().isPresent()) {
+            resources.addAll(executorRequirement.getExecutorInfo().getResourcesList());
         }
 
         return resources;
@@ -173,8 +177,8 @@ public class OfferRequirement {
             resourceIds.addAll(taskReq.getResourceIds());
         }
 
-        if (executorRequirementOptional.isPresent()) {
-            resourceIds.addAll(executorRequirementOptional.get().getResourceIds());
+        if (getExecutorRequirementOptional().isPresent()) {
+            resourceIds.addAll(executorRequirement.getResourceIds());
         }
 
         return resourceIds;
@@ -187,8 +191,8 @@ public class OfferRequirement {
             persistenceIds.addAll(taskReq.getPersistenceIds());
         }
 
-        if (executorRequirementOptional.isPresent()) {
-            persistenceIds.addAll(executorRequirementOptional.get().getPersistenceIds());
+        if (getExecutorRequirementOptional().isPresent()) {
+            persistenceIds.addAll(executorRequirement.getPersistenceIds());
         }
 
         return persistenceIds;

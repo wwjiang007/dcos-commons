@@ -52,7 +52,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
                 podInstance.getPod().getType(),
                 podInstance.getIndex(),
                 getNewTaskInfos(podInstance, tasksToLaunch, serviceName, targetConfigurationId),
-                Optional.of(getExecutor(podInstance, serviceName, targetConfigurationId)),
+                null,
                 podInstance.getPod().getPlacementRule());
     }
 
@@ -96,7 +96,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
                 podInstance.getPod().getType(),
                 podInstance.getIndex(),
                 taskRequirements,
-                ExecutorRequirement.create(getExecutor(podInstance, serviceName, targetConfigurationId)),
+                null,
                 podInstance.getPod().getPlacementRule());
     }
 
@@ -571,20 +571,17 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         }
 
         ReadinessCheckSpec readinessCheckSpec = taskSpec.getReadinessCheck().get();
-        Protos.HealthCheck.Builder builder = Protos.HealthCheck.newBuilder()
+
+        Protos.CheckInfo checkInfo = Protos.CheckInfo.newBuilder()
+                .setType(Protos.CheckInfo.Type.HTTP)
+                .setHttp(Protos.CheckInfo.Http.newBuilder()
+                        .setPath("http://google.com")
+                        .setPort(80))
                 .setDelaySeconds(readinessCheckSpec.getDelay())
                 .setIntervalSeconds(readinessCheckSpec.getInterval())
                 .setTimeoutSeconds(readinessCheckSpec.getTimeout())
-                .setConsecutiveFailures(0)
-                .setGracePeriodSeconds(0);
+                .build();
 
-        Protos.CommandInfo.Builder readinessCheckCommandBuilder = builder.getCommandBuilder()
-                .setValue(readinessCheckSpec.getCommand());
-        if (taskSpec.getCommand().isPresent()) {
-            readinessCheckCommandBuilder.setEnvironment(
-                    getTaskEnvironment(serviceName, podInstance, taskSpec, commandSpec));
-        }
-
-        CommonTaskUtils.setReadinessCheck(taskInfoBuilder, builder.build());
+        taskInfoBuilder.setCheck(checkInfo);
     }
 }
