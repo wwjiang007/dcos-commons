@@ -105,22 +105,22 @@ public class PortEvaluationStage extends ResourceEvaluationStage implements Offe
             }
 
             // Add port to the readiness check (if defined)
-            try {
-                Optional<Protos.HealthCheck> readinessCheck = CommonTaskUtils.getReadinessCheck(taskInfo);
-                if (readinessCheck.isPresent()) {
-                    Protos.HealthCheck readinessCheckToMutate = readinessCheck.get();
-                    Protos.CommandInfo readinessCommandWithPort = CommandUtils.addEnvVar(
-                            readinessCheckToMutate.getCommand(),
-                            getPortEnvironmentVariable(portName),
-                            Long.toString(port));
-                    Protos.HealthCheck readinessCheckWithPort = Protos.HealthCheck.newBuilder(readinessCheckToMutate)
-                            .setCommand(readinessCommandWithPort).build();
-                    CommonTaskUtils.setReadinessCheck(taskInfoBuilder, readinessCheckWithPort);
-                } else {
-                    LOGGER.info("Readiness check is not defined for task: {}", taskName);
-                }
-            } catch (TaskException e) {
-                LOGGER.error("Got exception while adding PORT env vars to ReadinessCheck", e);
+            Optional<Protos.CheckInfo> readinessCheck = CommonTaskUtils.getReadinessCheck(taskInfo);
+            if (readinessCheck.isPresent()) {
+                Protos.CheckInfo readinessCheckToMutate = readinessCheck.get();
+                Protos.CommandInfo readinessCommandWithPort = CommandUtils.addEnvVar(
+                        readinessCheckToMutate.getCommand().getCommand(),
+                        getPortEnvironmentVariable(portName),
+                        Long.toString(port));
+                Protos.CheckInfo readinessCheckWithPort = Protos.CheckInfo.newBuilder(readinessCheckToMutate)
+                        .setCommand(
+                                Protos.CheckInfo.Command.newBuilder()
+                                        .setCommand(readinessCommandWithPort)
+                                        .build())
+                        .build();
+                taskInfoBuilder.setCheck(readinessCheckWithPort);
+            } else {
+                LOGGER.info("Readiness check is not defined for task: {}", taskName);
             }
             offerRequirement.updateTaskRequirement(taskName, taskInfoBuilder.build());
         } else {

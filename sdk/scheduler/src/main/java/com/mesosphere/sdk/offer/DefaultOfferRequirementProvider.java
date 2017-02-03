@@ -573,10 +573,13 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         ReadinessCheckSpec readinessCheckSpec = taskSpec.getReadinessCheck().get();
 
         Protos.CheckInfo checkInfo = Protos.CheckInfo.newBuilder()
-                .setType(Protos.CheckInfo.Type.HTTP)
-                .setHttp(Protos.CheckInfo.Http.newBuilder()
-                        .setPath("http://google.com")
-                        .setPort(80))
+                .setType(Protos.CheckInfo.Type.COMMAND)
+                .setCommand(
+                        Protos.CheckInfo.Command.newBuilder()
+                                .setCommand(
+                                        CommandInfo.newBuilder()
+                                                .setValue(readinessCheckSpec.getCommand())
+                                                .setShell(true)))
                 .setDelaySeconds(readinessCheckSpec.getDelay())
                 .setIntervalSeconds(readinessCheckSpec.getInterval())
                 .setTimeoutSeconds(readinessCheckSpec.getTimeout())

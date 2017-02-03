@@ -115,21 +115,6 @@ public class CommonTaskUtilsTest {
         Assert.assertTrue(renderedYaml.contains(String.format("api-port: %d", TestConstants.PORT_API_VALUE)));
     }
 
-    @Test
-    public void testReadinessCheckTagging() throws TaskException {
-        Protos.TaskInfo.Builder builder = Protos.TaskInfo.newBuilder()
-                .setName(TestConstants.TASK_NAME)
-                .setTaskId(TestConstants.TASK_ID)
-                .setSlaveId(TestConstants.AGENT_ID);
-        Protos.HealthCheck inReadinessCheck = Protos.HealthCheck.newBuilder()
-                .setDelaySeconds(1.0)
-                .build();
-        CommonTaskUtils.setReadinessCheck(builder, inReadinessCheck);
-        Protos.HealthCheck outReadinessCheck = CommonTaskUtils.getReadinessCheck(builder.build()).get();
-
-        Assert.assertEquals(inReadinessCheck.getDelaySeconds(), outReadinessCheck.getDelaySeconds(), 0.0);
-    }
-
     private static Protos.TaskID getTaskId(String value) {
         return Protos.TaskID.newBuilder().setValue(value).build();
     }

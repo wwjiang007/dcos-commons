@@ -284,31 +284,14 @@ public class CommonTaskUtils {
     }
 
     /**
-     * Stores the {@link Attribute}s from the provided {@link Offer} into the {@link TaskInfo} as a
-     * {@link Label}. Any existing stored attributes are overwritten.
-     */
-    public static TaskInfo.Builder setReadinessCheck(TaskInfo.Builder taskBuilder, HealthCheck readinessCheck) {
-        byte[] encodedBytes = Base64.encodeBase64(readinessCheck.toByteArray());
-        String readinessCheckStr = new String(encodedBytes, StandardCharsets.UTF_8);
-        return taskBuilder.setLabels(
-                withLabelSet(taskBuilder.getLabels(), READINESS_CHECK_KEY, readinessCheckStr));
-    }
-
-    /**
      * Returns the string representations of any {@link Offer} {@link Attribute}s which were
      * embedded in the provided {@link TaskInfo}.
      */
-    public static Optional<HealthCheck> getReadinessCheck(TaskInfo taskInfo) throws TaskException {
-        Optional<String> readinessCheckStrOptional = findLabelValue(taskInfo.getLabels(), READINESS_CHECK_KEY);
-        if (!readinessCheckStrOptional.isPresent()) {
+    public static Optional<CheckInfo> getReadinessCheck(TaskInfo taskInfo) {
+        if (taskInfo.hasCheck()) {
+            return Optional.of(taskInfo.getCheck());
+        } else {
             return Optional.empty();
-        }
-
-        byte[] decodedBytes = Base64.decodeBase64(readinessCheckStrOptional.get());
-        try {
-            return Optional.of(HealthCheck.parseFrom(decodedBytes));
-        } catch (InvalidProtocolBufferException e) {
-            throw new TaskException(e);
         }
     }
 
@@ -324,23 +307,68 @@ public class CommonTaskUtils {
      * @return the result of a readiness check for the indicated TaskInfo and TaskStatus.
      */
     public static boolean readinessCheckSucceeded(TaskInfo taskInfo, TaskStatus taskStatus) {
-        Optional<HealthCheck> healthCheckOptional = Optional.empty();
-        try {
-            healthCheckOptional = getReadinessCheck(taskInfo);
-        } catch (TaskException e) {
-            LOGGER.error("Failed to get readiness check.", e);
+        Optional<CheckInfo> checkInfoOptional = getReadinessCheck(taskInfo);
+        if (!checkInfoOptional.isPresent()) {
+            LOGGER.info("No readiness check, so it passed.");
+            return true;
+        }
+
+        if (!taskStatus.hasCheckStatus()) {
+            LOGGER.info("Failing readiness check, no CheckStatus present.");
             return false;
         }
 
-        if (healthCheckOptional.isPresent()) {
-            Optional<String> readinessCheckResult = findLabelValue(taskStatus.getLabels(), READINESS_CHECK_PASSED_KEY);
-            if (readinessCheckResult.isPresent()) {
-                return readinessCheckResult.get().equals("true");
-            } else {
+        CheckStatusInfo checkStatusInfo = taskStatus.getCheckStatus();
+        if (!checkStatusInfo.hasType()) {
+            LOGGER.info("Failing readiness check, CheckStatusInfo does not have a type.");
+            return false;
+        }
+
+        switch (checkStatusInfo.getType()) {
+            case HTTP:
+                if (checkStatusInfo.hasHttp()){
+                    if (checkStatusInfo.getHttp().hasStatusCode()) {
+                        int statusCode = checkStatusInfo.getHttp().getStatusCode();
+
+                        if (statusCode == 200) {
+                            LOGGER.info("Passing readiness check, status code == {}.", statusCode);
+                            return true;
+                        } else {
+                            LOGGER.info("Failing readiness check, status code == {}", statusCode);
+                            return false;
+                        }
+                    } else {
+                        LOGGER.info("Failing readiness check, no status code present.");
+                        return false;
+                    }
+                } else {
+                    LOGGER.info("Failing readiness check, type is HTTP, but no HTTP element present.");
+                    return false;
+                }
+            case COMMAND:
+                if (checkStatusInfo.hasCommand()){
+                    if (checkStatusInfo.getCommand().hasExitCode()) {
+                        int exitCode = checkStatusInfo.getCommand().getExitCode();
+
+                        if (exitCode == 0) {
+                            LOGGER.info("Passing readiness check, exit code == {}.", exitCode);
+                            return true;
+                        } else {
+                            LOGGER.info("Failing readiness check, exit code == {}", exitCode);
+                            return false;
+                        }
+                    } else {
+                        LOGGER.info("Failing readiness check, no exit code present.");
+                        return false;
+                    }
+                } else {
+                    LOGGER.info("Failing readiness check, type is COMMAND, but no COMMAND element present.");
+                    return false;
+                }
+            default:
+                LOGGER.error("Failing readiness check, encountered unexpected status type: {}",
+                        checkStatusInfo.getType());
                 return false;
-            }
-        } else {
-            return true;
         }
     }
 

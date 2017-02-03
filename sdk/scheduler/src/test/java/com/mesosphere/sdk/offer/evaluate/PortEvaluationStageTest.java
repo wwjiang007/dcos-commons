@@ -229,9 +229,9 @@ public class PortEvaluationStageTest {
         }
         Assert.assertTrue(portInTaskEnv);
         boolean portInHealthEnv = false;
-        Optional<Protos.HealthCheck> readinessCheck = CommonTaskUtils.getReadinessCheck(taskInfo);
-        for (int i = 0; i < readinessCheck.get().getCommand().getEnvironment().getVariablesCount(); i++) {
-            Protos.Environment.Variable variable = readinessCheck.get().getCommand().getEnvironment().getVariables(i);
+        Optional<Protos.CheckInfo> readinessCheck = CommonTaskUtils.getReadinessCheck(taskInfo);
+        for (int i = 0; i < readinessCheck.get().getCommand().getCommand().getEnvironment().getVariablesCount(); i++) {
+            Protos.Environment.Variable variable = readinessCheck.get().getCommand().getCommand().getEnvironment().getVariables(i);
             if (Objects.equals(variable.getName(), "PORT_TEST_PORT")) {
                 Assert.assertEquals(variable.getValue(), "10000");
                 portInHealthEnv = true;

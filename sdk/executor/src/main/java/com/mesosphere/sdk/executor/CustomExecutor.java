@@ -72,7 +72,6 @@ public class CustomExecutor implements Executor {
             LaunchedTask launchedTask = new LaunchedTask(taskToExecute, future);
             launchedTasks.put(unpackedTaskInfo.getTaskId(), launchedTask);
             scheduleHealthCheck(driver, unpackedTaskInfo, launchedTask);
-            scheduleReadinessCheck(driver, unpackedTaskInfo, launchedTask);
         } catch (Throwable t) {
             LOGGER.error(String.format("Error launching task: %s", TextFormat.shortDebugString(task)), t);
 
@@ -98,27 +97,6 @@ public class CustomExecutor implements Executor {
         }
 
         scheduleCheck(executorDriver, taskInfo, taskInfo.getHealthCheck(), launchedTask);
-    }
-
-    private void scheduleReadinessCheck(
-            ExecutorDriver executorDriver,
-            Protos.TaskInfo taskInfo,
-            LaunchedTask launchedTask) {
-
-        Optional<Protos.HealthCheck> readinessCheckOptional = Optional.empty();
-        try {
-            readinessCheckOptional = CommonTaskUtils.getReadinessCheck(taskInfo);
-        } catch (TaskException e) {
-            LOGGER.error("Failed to extract readiness check.", e);
-            return;
-        }
-
-        if (!readinessCheckOptional.isPresent()){
-            LOGGER.info("No readiness check for task: {}", taskInfo.getName());
-            return;
-        }
-
-        scheduleCheck(executorDriver, taskInfo, readinessCheckOptional.get(), launchedTask);
     }
 
     private void scheduleCheck(
