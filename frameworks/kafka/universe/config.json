@@ -104,46 +104,15 @@
             "type": "integer",
             "default": 0
           },
-          "jmx": {
-            "description":"JMX options",
-            "type":"object",
-            "properties": {
-              "enable": {
-                "description": "Whether to enable JMX options",
-                "type": "boolean",
-                "default": false
-              },
-              "remote": {
-                "description": "Whether to enable remote monitoring",
-                "type": "boolean",
-                "default": false
-              },
-              "remote_port": {
-                "description": "Port number for Kafka access",
-                "type": "integer",
-                "default": 9999
-              },
-              "remote_registry_ssl": {
-                "description": "Whether to protect the remote RMI registry using SSL",
-                "type": "boolean",
-                "default": false
-              },
-              "remote_ssl": {
-                "description": "Whether to enable SSL for remote access",
-                "type": "boolean",
-                "default": false
-              },
-              "remote_authenticate": {
-                "description": "Whether to enable password authentication for remote access",
-                "type": "boolean",
-                "default": false
-              },
-              "remote_ssl_need_client_auth": {
-                "description": "Whether to enable SSL client authentication for remote access",
-                "type": "boolean",
-                "default": false
-              }
-            }
+          "kafka_jmx_opts": {
+            "description":"Kafka JMX Options, (set KAKFA_JMX_OPTS environment variable before kakka-start.sh)",
+            "type":"string",
+            "default": "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false"
+          },
+          "jmx_port": {
+            "description": "Set port number for Kafka JMX access (set JMX_PORT environment variable before kafka-start.sh)",
+             "type": "integer",
+             "default": 9999
           },
           "statsd": {
             "description":"Statsd configuration",
