@@ -1,0 +1,27 @@
+name: {{FRAMEWORK_NAME}}
+pods:
+  couchbase:
+    count: {{COUCHBASE_COUNT}}
+    container:
+      image-name: couchbase/server
+      rlimits:
+        RLIMIT_NOFILE:
+          soft: 40960
+          hard: 40960
+        RLIMIT_CORE:
+          soft: 15728640
+          hard: 15728640  
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: >
+          cd /mnt/mesos/sandbox/couchbase-container-path &&
+          mkdir -p var/lib/couchbase var/lib/couchbase/config var/lib/couchbase/data var/lib/couchbase/stats var/lib/couchbase/logs var/lib/moxi &&
+          chown -R couchbase:couchbase var &&
+          exec chpst -ucouchbase  /opt/couchbase/bin/couchbase-server -- -noinput
+        cpus: {{COUCHBASE_CPUS}}
+        memory: {{COUCHBASE_MEM}}
+        volume:
+          path: couchbase-container-path
+          type: ROOT
+          size: {{COUCHBASE_DISK}}

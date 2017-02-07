@@ -1,0 +1,2 @@
+PACKAGE_NAME = 'couchbase'
+DEFAULT_TASK_COUNT = 1
