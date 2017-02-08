@@ -1,9 +1,11 @@
 name: {{FRAMEWORK_NAME}}
 pods:
   couchbase:
+    uris: 
+      - https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm
     count: {{COUCHBASE_COUNT}}
     container:
-      image-name: couchbase/server
+      image-name: centos
       rlimits:
         RLIMIT_NOFILE:
           soft: 40960
@@ -15,10 +17,23 @@ pods:
       server:
         goal: RUNNING
         cmd: >
-          cd /mnt/mesos/sandbox/couchbase-container-path &&
-          mkdir -p var/lib/couchbase var/lib/couchbase/config var/lib/couchbase/data var/lib/couchbase/stats var/lib/couchbase/logs var/lib/moxi &&
-          chown -R couchbase:couchbase var &&
-          exec chpst -ucouchbase  /opt/couchbase/bin/couchbase-server -- -noinput
+          cd $MESOS_SANDBOX/couchbase-container-path &&
+          mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/moxi &&
+          cd .. &&
+          yum -y install openssl &&
+          rpm -i couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm &&
+          chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
+          cd /opt/couchbase/var/lib/couchbase &&
+          rm -rf config/ stats/ logs/ crash/ data/ &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config config &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs logs &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats stats &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data data &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index index &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash crash &&
+          cd .. &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/moxi moxi &&
+          /opt/couchbase/bin/couchbase-server -- -noinput -detached
         cpus: {{COUCHBASE_CPUS}}
         memory: {{COUCHBASE_MEM}}
         volume:
