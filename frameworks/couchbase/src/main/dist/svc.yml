@@ -33,7 +33,7 @@ pods:
           ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash crash &&
           cd .. &&
           ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/moxi moxi &&
-          /opt/couchbase/bin/couchbase-server -- -noinput -detached
+          /opt/couchbase/bin/couchbase-server -- -noinput
         cpus: {{COUCHBASE_CPUS}}
         memory: {{COUCHBASE_MEM}}
         volume:
