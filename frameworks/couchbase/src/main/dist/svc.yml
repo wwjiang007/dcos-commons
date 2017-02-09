@@ -134,7 +134,7 @@ pods:
       add-data-node:
         goal: FINISHED
         cmd: >
-          /opt/couchbase/bin/couchbase-cli server-add -c couchbase-seed-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-add=couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password=password --services=data
+          /opt/couchbase/bin/couchbase-cli server-add -c couchbase-seed-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-add=couchbase-data-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password=password --services=data
         resource-set: cli-resources                 
 plans:
   deploy:
