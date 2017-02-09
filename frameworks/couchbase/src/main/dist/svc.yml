@@ -3,7 +3,7 @@ web-url: http://proxylite-0-server.{{FRAMEWORK_NAME}}.mesos:4040
 pods:
   proxylite:
     container:
-      image-name: mesosphere/proxylite:1.0.0
+      image-name: nlsun/proxylite:0.0.13
     count: 1
     tasks:
       server:
@@ -18,11 +18,22 @@ pods:
         env:
           ROOT_REDIRECT: "/example"
           EXTERNAL_ROUTES: "/v1,/example,/admin"
-          INTERNAL_ROUTES: "{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,example.com:80,couchbase-0-server.{{FRAMEWORK_NAME}}.mesos:8091"
-  couchbase:
+          INTERNAL_ROUTES: "{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,example.com:80,couchbase-seed-0-server.{{FRAMEWORK_NAME}}.mesos:8091"
+  couchbase_seed:
     uris: 
       - https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm
     count: {{COUCHBASE_COUNT}}
+    resource-sets:
+      couchbase-resources:
+        cpus: {{COUCHBASE_CPUS}}
+        memory: {{COUCHBASE_MEM}}
+        volume:
+          path: couchbase-container-path
+          type: ROOT
+          size: {{COUCHBASE_DISK}}
+      cli-resources:
+        cpus: 1
+        memory: 1024     
     container:
       image-name: centos
       rlimits:
@@ -35,6 +46,7 @@ pods:
     tasks:
       server:
         goal: RUNNING
+        resource-set: couchbase-resources
         cmd: >
           cd $MESOS_SANDBOX/couchbase-container-path &&
           mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/moxi &&
@@ -53,9 +65,99 @@ pods:
           cd .. &&
           ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/moxi moxi &&
           /opt/couchbase/bin/couchbase-server -- -noinput
+        readiness-check:
+          cmd: curl -I localhost:8091/ui/index.html | grep "HTTP/1.1 200 OK"
+          interval: 5
+          delay: 0
+          timeout: 10
+      initialize-cluster:
+        goal: FINISHED
+        cmd: >
+          /opt/couchbase/bin/couchbase-cli cluster-init -c localhost:8091 --cluster-init-username=Administrator --cluster-init-password=password --cluster-init-port=8091 --cluster-init-ramsize=$COUCHBASE_MEM_USABLE --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index
+        resource-set: cli-resources
+      rebalance-cluster:
+        goal: FINISHED
+        cmd: >
+          /opt/couchbase/bin/couchbase-cli rebalance -c localhost:8091 -u Administrator -p password
+        resource-set: cli-resources   
+  couchbase_data:
+    uris: 
+      - https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm
+    count: {{COUCHBASE_COUNT}}
+    resource-sets:
+      couchbase-resources:
         cpus: {{COUCHBASE_CPUS}}
         memory: {{COUCHBASE_MEM}}
         volume:
           path: couchbase-container-path
           type: ROOT
           size: {{COUCHBASE_DISK}}
+      cli-resources:
+        cpus: 1
+        memory: 1024     
+    container:
+      image-name: centos
+      rlimits:
+        RLIMIT_NOFILE:
+          soft: 40960
+          hard: 40960
+        RLIMIT_CORE:
+          soft: 15728640
+          hard: 15728640  
+    tasks:
+      server:
+        goal: RUNNING
+        resource-set: couchbase-resources
+        cmd: >
+          cd $MESOS_SANDBOX/couchbase-container-path &&
+          mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/moxi &&
+          cd .. &&
+          yum -y install openssl &&
+          rpm -i couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm &&
+          chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
+          cd /opt/couchbase/var/lib/couchbase &&
+          rm -rf config/ stats/ logs/ crash/ data/ &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config config &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs logs &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats stats &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data data &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index index &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash crash &&
+          cd .. &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/moxi moxi &&
+          /opt/couchbase/bin/couchbase-server -- -noinput
+        readiness-check:
+          cmd: curl -I localhost:8091/ui/index.html | grep "HTTP/1.1 200 OK"
+          interval: 5
+          delay: 0
+          timeout: 10
+      add-data-node:
+        goal: FINISHED
+        cmd: >
+          /opt/couchbase/bin/couchbase-cli server-add -c couchbase-seed-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-add=couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password=password --services=data
+        resource-set: cli-resources                 
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      initialize-cluster:
+        strategy: serial
+        pod: couchbase_seed
+        steps:
+          - 0: [[server], [initialize-cluster]]
+      setup-data-nodes:
+        strategy: serial
+        pod: couchbase_data
+        steps:
+          - 0: [[server], [add-data-node]]
+      rebalance-cluster:
+        strategy: serial
+        pod: couchbase_seed
+        steps:
+          - 0: [[rebalance-cluster]]      
+      setup-proxy:
+        strategy: serial
+        pod: proxylite
+        steps:
+          - 0: [[server]]         
+                    
