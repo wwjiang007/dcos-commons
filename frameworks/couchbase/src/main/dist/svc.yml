@@ -1,5 +1,24 @@
 name: {{FRAMEWORK_NAME}}
+web-url: http://proxylite-0-server.{{FRAMEWORK_NAME}}.mesos:4040
 pods:
+  proxylite:
+    container:
+      image-name: mesosphere/proxylite:1.0.0
+    count: 1
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: "/proxylite/run.sh"
+        cpus: 1
+        memory: 256
+        ports:
+          proxylite:
+            env-key: PORT_PROXYLITE
+            port: 4040
+        env:
+          ROOT_REDIRECT: "/example"
+          EXTERNAL_ROUTES: "/v1,/example,/admin"
+          INTERNAL_ROUTES: "{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,example.com:80,couchbase-0-server.{{FRAMEWORK_NAME}}.mesos:8091"
   couchbase:
     uris: 
       - https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm
