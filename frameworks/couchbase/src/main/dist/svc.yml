@@ -94,7 +94,7 @@ pods:
       create-index:
         goal: FINISHED
         cmd: >
-          curl -v http://couchbase-query-0-server.{{FRAMEWORK_NAME}}.mesos:8093/query/service -d 'statement=CREATE PRIMARY INDEX `mesosphere-primary-index` ON `mesosphere`'
+          curl -vf http://couchbase-query-0-server.{{FRAMEWORK_NAME}}.mesos:8093/query/service -d 'statement=CREATE PRIMARY INDEX `mesosphere-primary-index` ON `mesosphere`'
         resource-set: cli-resources  
       load-data:
         goal: FINISHED
@@ -303,19 +303,9 @@ plans:
         pod: proxylite
         steps:
           - default: [[server]]
-      create-mesosphere-bucket:
+      create-sample-bucket:
         strategy: serial
         pod: couchbase_seed
         steps:
-          - default: [[add-bucket]]  
-      create-mesosphere-primary-index:
-        strategy: serial
-        pod: couchbase_seed
-        steps:
-          - default: [[create-index]]  
-      load-sample-data:
-        strategy: serial
-        pod: couchbase_seed
-        steps:
-          - default: [[load-data]]                                    
+          - default: [[add-bucket],[create-index],[load-data]]                                    
                     

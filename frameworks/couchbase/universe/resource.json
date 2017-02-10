@@ -8,9 +8,9 @@
     }
   },
   "images": {
-    "icon-small": "https://github.com/dcos/dcos-ui/blob/master/plugins/services/src/img/icon-service-default-small.png?raw=true",
-    "icon-medium": "https://github.com/dcos/dcos-ui/blob/master/plugins/services/src/img/icon-service-default-medium.png?raw=true",
-    "icon-large": "https://github.com/dcos/dcos-ui/blob/master/plugins/services/src/img/icon-service-default-large.png?raw=true"
+    "icon-small": "https://s3-us-west-2.amazonaws.com/jharper-public-mesosphere/images/coucbase_icon_small.png?raw=true",
+    "icon-medium": "https://s3-us-west-2.amazonaws.com/jharper-public-mesosphere/images/coucbase_icon_medium.png?raw=true",
+    "icon-large": "https://s3-us-west-2.amazonaws.com/jharper-public-mesosphere/images/coucbase_icon_large.png?raw=true"
   },
   "cli":{
     "binaries":{
