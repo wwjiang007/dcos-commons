@@ -14,6 +14,10 @@
         <value>name-0-node,name-1-node</value>
     </property>
     <property>
+        <name>dfs.http.policy</name>
+        <value>HTTP_AND_HTTPS</value>
+    </property>
+    <property>
         <name>dfs.namenode.http-address.hdfs.name-0-node</name>
         <value>name-0-node.{{FRAMEWORK_NAME}}.mesos:{{NAME_NODE_HTTP_PORT}}</value>
     </property>
