@@ -76,6 +76,11 @@ pods:
         cmd: >
           /opt/couchbase/bin/couchbase-cli cluster-init -c couchbase-seed-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --cluster-init-username=Administrator --cluster-init-password=password --cluster-init-port=8091 --cluster-init-ramsize=$COUCHBASE_MEM_USABLE --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index
         resource-set: cli-resources
+      rename-seed-host:
+        goal: FINISHED
+        cmd: >
+          curl -vf -X POST -u Administrator:password http://couchbase-seed-0-server.{{FRAMEWORK_NAME}}.mesos:8091/node/controller/rename -d hostname=couchbase-seed-0-server.{{FRAMEWORK_NAME}}.mesos
+        resource-set: cli-resources        
       rebalance-cluster:
         goal: FINISHED
         cmd: >
@@ -277,7 +282,7 @@ plans:
         strategy: serial
         pod: couchbase_seed
         steps:
-          - default: [[server], [initialize-cluster]]
+          - default: [[server], [initialize-cluster],[rename-seed-host]]
       setup-data-nodes:
         strategy: serial
         pod: couchbase_data

@@ -1,6 +1,6 @@
 {
   "packagingVersion": "2.0",
-  "name": "couchbase",
+  "name": "couchbase-server",
   "version": "{{package-version}}",
   "maintainer": "support@mesosphere.io",
   "description": "A couchbase implementation of a service using the DC/OS SDK",
