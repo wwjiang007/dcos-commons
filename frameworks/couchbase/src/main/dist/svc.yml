@@ -209,9 +209,4 @@ plans:
         pod: couchbase_data
         steps:
           - 0: [[rebalance-cluster]]
-      #create-sample-bucket:
-      #  strategy: serial
-      #  pod: couchbase_seed
-      #  steps:
-      #    - default: [[add-bucket],[create-index],[load-data]]
                     
