@@ -3,16 +3,16 @@ web-url: http://proxylite-0-server.{{FRAMEWORK_NAME}}.mesos:4040
 pods:
   couchbase_data:
     uris: 
-      - https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm
-    count: {{COUCHBASE_COUNT}}
+      - {{COUCHBASE_INSTALLER_LOCATION}}
+    count: {{DATA_SERVICE_COUNT}}
     resource-sets:
       couchbase-resources:
-        cpus: {{COUCHBASE_CPUS}}
-        memory: {{COUCHBASE_MEM}}
+        cpus: {{DATA_SERVICE_CPUS}}
+        memory: {{DATA_SERVICE_MEM}}
         volume:
           path: couchbase-container-path
           type: ROOT
-          size: {{COUCHBASE_DISK}}
+          size: {{DATA_SERVICE_DISK}}
       cli-resources:
         cpus: 1
         memory: 1024     
@@ -60,7 +60,7 @@ pods:
       initialize-cluster:
         goal: FINISHED
         cmd: >
-             /opt/couchbase/bin/couchbase-cli cluster-init -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --cluster-init-username=Administrator --cluster-init-password=password --cluster-init-port=8091 --cluster-init-ramsize=$COUCHBASE_MEM_USABLE --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index
+             /opt/couchbase/bin/couchbase-cli cluster-init -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --cluster-init-username=Administrator --cluster-init-password=password --cluster-init-port=8091 --cluster-init-ramsize={{DATA_SERVICE_MEM_USABLE}} {{#INDEX_SERVICE_ENABLED}}--cluster-index-ramsize={{INDEX_SERVICE_MEM_USABLE}} {{#INDEX_SERVICE_USE_MOI}}--index-storage-setting=memopt{{/INDEX_SERVICE_USE_MOI}}{{/INDEX_SERVICE_ENABLED}} --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index
         resource-set: cli-resources
       rename-seed-host:
         goal: FINISHED
@@ -74,16 +74,16 @@ pods:
         resource-set: cli-resources
   couchbase_index:
     uris: 
-      - https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm
-    count: {{COUCHBASE_COUNT}}
+      - {{COUCHBASE_INSTALLER_LOCATION}}
+    count: {{INDEX_SERVICE_COUNT}}
     resource-sets:
       couchbase-resources:
-        cpus: {{COUCHBASE_CPUS}}
-        memory: {{COUCHBASE_MEM}}
+        cpus: {{INDEX_SERVICE_CPUS}}
+        memory: {{INDEX_SERVICE_MEM}}
         volume:
           path: couchbase-container-path
           type: ROOT
-          size: {{COUCHBASE_DISK}}
+          size: {{INDEX_SERVICE_DISK}}
       cli-resources:
         cpus: 1
         memory: 1024     
@@ -130,16 +130,16 @@ pods:
         resource-set: cli-resources  
   couchbase_query:
     uris: 
-      - https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm
-    count: {{COUCHBASE_COUNT}}
+      - {{COUCHBASE_INSTALLER_LOCATION}}
+    count: {{QUERY_SERVICE_COUNT}}
     resource-sets:
       couchbase-resources:
-        cpus: {{COUCHBASE_CPUS}}
-        memory: {{COUCHBASE_MEM}}
+        cpus: {{QUERY_SERVICE_CPUS}}
+        memory: {{QUERY_SERVICE_MEM}}
         volume:
           path: couchbase-container-path
           type: ROOT
-          size: {{COUCHBASE_DISK}}
+          size: {{QUERY_SERVICE_DISK}}
       cli-resources:
         cpus: 1
         memory: 1024     
@@ -198,7 +198,7 @@ plans:
         strategy: serial
         pod: couchbase_index
         steps:
-          - default: [[server], [add-index-node]]
+          - default: [[server], [add-index-node]]    
       setup-query-nodes:
         strategy: serial
         pod: couchbase_query

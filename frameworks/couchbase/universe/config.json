@@ -28,57 +28,149 @@
         }
       },
       "couchbase":{
-        "description":"Template pod configuration properties",
+        "description":"Common Couchbase Cluster Configuration",
         "type":"object",
         "properties":{
+          "version":{
+            "description":"Version of Couchbase Server to be installed",
+            "type":"number",
+            "default":"4.5.1"
+          },
+          "installer_location":{
+            "description":"Location of the installation RPM file",
+            "type":"string",
+            "default": "https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm"
+          }   
+        },
+        "required":[
+          "version",
+          "installer_location"
+        ]
+      },      
+      "data-service":{
+        "description":"Couchbase Data Service Configuration",
+        "type":"object",
+        "properties":{
+          "count":{
+            "description":"Number of data nodes to create",
+            "type":"integer",
+            "default":1
+          },        
           "cpus":{
-            "description":"Template pod CPU requirements",
+            "description":"Number of cores available for each Data Service container",
             "type":"number",
             "default":2
           },
           "mem":{
-            "description":"Template pod mem requirements (in MB)",
+            "description":"Amount of memory available for each Data Service container (in MB)",
             "type":"integer",
             "default": 4096
           },
-          "memUsable":{
-            "description":"Template pod mem requirements (in MB)",
+          "mem_usable":{
+            "description":"Amount of memory available for each Data Service node (in MB)",
             "type":"integer",
             "default": 3686
           },          
           "disk":{
-            "description":"Template pod persistent disk requirements (in MB)",
+            "description":"Size of the persistent data volume that hosts the data partition (in MB)",
+            "type":"integer",
+            "default":15360
+          }
+        },
+        "required":[
+          "count",
+          "cpus",
+          "mem",
+          "mem_usable",
+          "disk"
+        ]
+      },
+      "index-service":{
+        "description":"Template pod configuration properties",
+        "type":"object",
+        "properties":{
+          "enabled":{
+            "description":"Determines whether or not the index service will be installed",
+            "type":"boolean",
+            "default":true
+          },            
+          "count":{
+            "description":"Number of index nodes to create",
+            "type":"integer",
+            "default":1
+          },        
+          "cpus":{
+            "description":"Number of cores available for each Index Service container",
+            "type":"number",
+            "default":2
+          },
+          "mem":{
+            "description":"Amount of memory available for each Index Service container (in MB)",
+            "type":"integer",
+            "default": 4096
+          },
+          "mem_usable":{
+            "description":"Amount of memory available for each Index Service node (in MB)",
+            "type":"integer",
+            "default": 3686
+          },          
+          "disk":{
+            "description":"Size of the persistent data volume that hosts the data partition (in MB)",
             "type":"integer",
             "default":15360
           },
-          "count":{
-            "description":"Number of Template pods to run",
-            "type":"integer",
-            "default":1
-          },
-          "dataCount":{
-            "description":"Number of Template pods to run",
-            "type":"integer",
-            "default":1
-          },
-          "indexCount":{
-            "description":"Number of Template pods to run",
-            "type":"integer",
-            "default":1
-          },
-          "queryCount":{
-            "description":"Number of Template pods to run",
-            "type":"integer",
-            "default":1
+          "use_moi":{
+            "description":"Determines whether standard or memory optimized GSIs will be used",
+            "type":"boolean",
+            "default":false          
           }
-          
         },
         "required":[
+          "count",
           "cpus",
           "mem",
-          "disk",
-          "count"
+          "mem_usable",   
+		  "use_moi",                 
+          "disk"
         ]
-      }
+      },
+      "query-service":{
+        "description":"Template pod configuration properties",
+        "type":"object",
+        "properties":{
+          "enabled":{
+            "description":"Determines whether or not the index service will be installed",
+            "type":"boolean",
+            "default":true
+          },         
+		  "count":{
+            "description":"Number of query nodes to create",
+            "type":"integer",
+            "default":1
+          },        
+          "cpus":{
+            "description":"Number of cores available for each Query Service container",
+            "type":"number",
+            "default":2
+          },
+          "mem":{
+            "description":"Amount of memory available for each Query Service container (in MB)",
+            "type":"integer",
+            "default": 4096
+          },         
+          "disk":{
+            "description":"Size of the persistent data volume that hosts the data partition (in MB)",
+            "type":"integer",
+            "default":15360
+          }
+        },
+        "required":[
+          "enabled",        
+          "count",
+          "cpus",
+          "mem",
+          "disk"
+        ]
+      }            
     }
 }

@@ -12,15 +12,32 @@
   },
   "env": {
     "FRAMEWORK_NAME": "{{service.name}}",
-    "COUCHBASE_COUNT": "{{couchbase.count}}",
-    "COUCHBASE_CPUS": "{{couchbase.cpus}}",
-    "COUCHBASE_MEM": "{{couchbase.mem}}",
-    "COUCHBASE_MEM_USABLE": "{{couchbase.memUsable}}",    
-    "COUCHBASE_DISK": "{{couchbase.disk}}",
+    "COUCHBASE_VERSION": "{{couchbase.version}}",
+    "COUCHBASE_INSTALLER_LOCATION": "{{couchbase.installer_location}}",        
+    "DATA_SERVICE_COUNT": "{{data-service.count}}",
+    "DATA_SERVICE_CPUS": "{{data-service.cpus}}",
+    "DATA_SERVICE_MEM": "{{data-service.mem}}",
+    "DATA_SERVICE_MEM_USABLE": "{{data-service.mem_usable}}",    
+    "DATA_SERVICE_DISK": "{{data-service.disk}}",
+    "INDEX_SERVICE_COUNT": "{{index-service.count}}",
+    "INDEX_SERVICE_CPUS": "{{index-service.cpus}}",
+    {{#index-service.enabled}}
+    "INDEX_SERVICE_ENABLED": "{{index-service.enabled}}",
+    {{/index-service.enabled}}    
+    "INDEX_SERVICE_MEM": "{{index-service.mem}}",
+    "INDEX_SERVICE_MEM_USABLE": "{{index-service.mem_usable}}", 
+    "INDEX_SERVICE_USE_MOI": "{{index-service.use_moi}}",       
+    "INDEX_SERVICE_DISK": "{{index-service.disk}}",
+    {{#query-service.enabled}}
+    "QUERY_SERVICE_ENABLED": "{{query-service.enabled}}",
+    {{/query-service.enabled}}    
+    "QUERY_SERVICE_COUNT": "{{query-service.count}}",
+    "QUERY_SERVICE_CPUS": "{{query-service.cpus}}",
+    "QUERY_SERVICE_MEM": "{{query-service.mem}}",  
+    "QUERY_SERVICE_DISK": "{{query-service.disk}}",        
     "SLEEP_DURATION": "{{service.sleep}}",
     "EXECUTOR_URI": "{{resource.assets.uris.executor-zip}}",
-    "LIBMESOS_URI": "{{resource.assets.uris.libmesos-bundle-tar-gz}}",
-    "TASKCFG_COUCHBASE_DATA_COUCHBASE_MEM_USABLE" : "{{couchbase.memUsable}}"
+    "LIBMESOS_URI": "{{resource.assets.uris.libmesos-bundle-tar-gz}}"
   },
   "uris": [
     "{{resource.assets.uris.jre-tar-gz}}",
