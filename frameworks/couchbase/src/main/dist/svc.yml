@@ -60,7 +60,7 @@ pods:
       initialize-cluster:
         goal: FINISHED
         cmd: >
-             /opt/couchbase/bin/couchbase-cli cluster-init -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --cluster-init-username=Administrator --cluster-init-password=password --cluster-init-port=8091 --cluster-init-ramsize={{DATA_SERVICE_MEM_USABLE}} {{#INDEX_SERVICE_ENABLED}}--cluster-index-ramsize={{INDEX_SERVICE_MEM_USABLE}} {{#INDEX_SERVICE_USE_MOI}}--index-storage-setting=memopt{{/INDEX_SERVICE_USE_MOI}}{{/INDEX_SERVICE_ENABLED}} --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index
+             /opt/couchbase/bin/couchbase-cli cluster-init -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --cluster-init-username=Administrator --cluster-init-password=password --cluster-init-port=8091 --cluster-init-ramsize={{DATA_SERVICE_MEM_USABLE}} {{#INDEX_SERVICE_ENABLED}}--cluster-index-ramsize={{INDEX_SERVICE_MEM_USABLE}} --index-storage-setting={{INDEX_SERVICE_INDEX_TYPE}}{{/INDEX_SERVICE_ENABLED}} --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index
         resource-set: cli-resources
       rename-seed-host:
         goal: FINISHED
@@ -194,16 +194,20 @@ plans:
         steps:
           - 0: [[server], [initialize-cluster], [rename-seed-host]]
           - default: [[server], [add-data-node]]
+{{#INDEX_SERVICE_ENABLED}}
       setup-index-nodes:
         strategy: serial
         pod: couchbase_index
         steps:
-          - default: [[server], [add-index-node]]    
+          - default: [[server], [add-index-node]]
+{{/INDEX_SERVICE_ENABLED}}
+{{#QUERY_SERVICE_ENABLED}}
       setup-query-nodes:
         strategy: serial
         pod: couchbase_query
         steps:
-          - default: [[server], [add-query-node]]                    
+          - default: [[server], [add-query-node]]
+{{/QUERY_SERVICE_ENABLED}}
       rebalance-cluster:
         strategy: serial
         pod: couchbase_data

@@ -33,7 +33,7 @@
         "properties":{
           "version":{
             "description":"Version of Couchbase Server to be installed",
-            "type":"number",
+            "type":"string",
             "default":"4.5.1"
           },
           "installer_location":{
@@ -119,10 +119,10 @@
             "type":"integer",
             "default":15360
           },
-          "use_moi":{
-            "description":"Determines whether standard or memory optimized GSIs will be used",
-            "type":"boolean",
-            "default":false          
+          "index_type":{
+            "description":"Determines whether standard or memory optimized GSIs will be used, choices: default,memopt",
+            "type":"string",
+            "default":"default"          
           }
         },
         "required":[
@@ -130,7 +130,7 @@
           "cpus",
           "mem",
           "mem_usable",   
-		  "use_moi",                 
+		  "index_type",                 
           "disk"
         ]
       },
