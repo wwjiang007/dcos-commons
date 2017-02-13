@@ -18,7 +18,7 @@
           "spec_file" : {
             "description":"The name of the service spec yaml file.",
             "type":"string",
-            "default":"svc.yml"
+            "default":"shared-resource-set.yml"
           },
           "mesos_api_version" : {
             "description":"Configures the Mesos API version to use. Possible values: V0 (non-HTTP), V1 (HTTP)",

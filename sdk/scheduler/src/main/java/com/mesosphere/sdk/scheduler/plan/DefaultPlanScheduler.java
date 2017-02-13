@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.mesosphere.sdk.offer.*;
 import com.mesosphere.sdk.offer.evaluate.OfferEvaluator;
 import com.mesosphere.sdk.scheduler.TaskKiller;
+import com.mesosphere.sdk.specification.ResourceSet;
+import com.mesosphere.sdk.specification.TaskSpec;
 import com.mesosphere.sdk.state.StateStore;
 
 import org.apache.mesos.Protos;
@@ -134,15 +136,19 @@ public class DefaultPlanScheduler implements PlanScheduler {
         Map<String, TaskInfo> taskInfoMap = new HashMap<>();
         stateStore.fetchTasks().forEach(taskInfo -> taskInfoMap.put(taskInfo.getName(), taskInfo));
 
-        List<String> taskNames = TaskUtils.getTaskNames(
-                podInstanceRequirement.getPodInstance(),
-                podInstanceRequirement.getTasksToLaunch());
-
-        taskNames = taskNames.stream()
-                .filter(taskName -> taskInfoMap.containsKey(taskName))
+        List<ResourceSet> resourceSetsToConsume =  podInstanceRequirement.getTasksToLaunch().stream()
+                .map(taskName -> TaskUtils.getTaskSpec(podInstanceRequirement.getPodInstance(), taskName))
+                .filter(taskSpecOptional -> taskSpecOptional.isPresent())
+                .map(taskSpecOptional -> taskSpecOptional.get())
+                .map(taskSpec -> taskSpec.getResourceSet())
                 .collect(Collectors.toList());
 
-        for (String taskName : taskNames) {
+        List<String> tasksToKill = podInstanceRequirement.getPodInstance().getPod().getTasks().stream()
+                .filter(taskSpec -> resourceSetsToConsume.contains(taskSpec.getResourceSet()))
+                .map(taskSpec -> TaskSpec.getInstanceName(podInstanceRequirement.getPodInstance(), taskSpec))
+                .collect(Collectors.toList());
+
+        for (String taskName : tasksToKill) {
             TaskInfo taskInfo = taskInfoMap.get(taskName);
             Optional<Protos.TaskStatus> taskStatusOptional = stateStore.fetchStatus(taskInfo.getName());
 

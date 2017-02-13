@@ -1,0 +1,39 @@
+name: "hello-world"
+pods:
+  hello:
+    count: 2
+    resource-sets:
+      shared-resources:
+        cpus: {{HELLO_CPUS}}
+        memory: 256
+      separate-resources:
+        cpus: {{HELLO_CPUS}}
+        memory: 256
+    tasks:
+      one:
+        goal: RUNNING
+        cmd: "echo $TASK_NAME >> hello-container-path/output && sleep $SLEEP_DURATION"
+        resource-set: shared-resources
+        env:
+          SLEEP_DURATION: 1000
+      two:
+        goal: RUNNING
+        cmd: "echo $TASK_NAME >> hello-container-path/output && sleep $SLEEP_DURATION"
+        resource-set: shared-resources
+        env:
+          SLEEP_DURATION: 1000
+      three:
+        goal: RUNNING
+        cmd: "echo $TASK_NAME >> hello-container-path/output && sleep $SLEEP_DURATION"
+        resource-set: separate-resources
+        env:
+          SLEEP_DURATION: 1000
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      one-two:
+        strategy: serial
+        pod: hello
+        steps:
+          - default: [[one], [two], [three]]
