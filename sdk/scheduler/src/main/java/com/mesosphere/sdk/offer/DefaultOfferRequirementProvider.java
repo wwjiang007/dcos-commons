@@ -2,6 +2,7 @@ package com.mesosphere.sdk.offer;
 
 import com.google.protobuf.TextFormat;
 import com.mesosphere.sdk.api.ArtifactResource;
+import com.mesosphere.sdk.executor.ExecutorUtils;
 import com.mesosphere.sdk.specification.*;
 import com.mesosphere.sdk.specification.util.RLimit;
 import com.mesosphere.sdk.state.StateStore;
@@ -423,7 +424,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         }
 
         LOGGER.info("Creating new executor for pod {}, as no RUNNING tasks were found", podInstance.getName());
-        return getNewExecutorInfo(podInstance.getPod(), serviceName, targetConfigurationId);
+        return getNewExecutorInfo("hello-world-role", "hello-world-principal", stateStore.fetchFrameworkId().get());
     }
 
     private static Protos.ContainerInfo getContainerInfo(ContainerSpec containerSpec) {
@@ -464,11 +465,13 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         return rLimitInfoBuilder.build();
     }
 
-    private static Protos.ExecutorInfo getNewExecutorInfo(
-            PodSpec podSpec, String serviceName, UUID targetConfigurationId) throws IllegalStateException {
+    private static Protos.ExecutorInfo getNewExecutorInfo(String role, String principal, Protos.FrameworkID frameworkId)
+            throws IllegalStateException {
         return Protos.ExecutorInfo.newBuilder()
                 .setType(Protos.ExecutorInfo.Type.DEFAULT)
-                .setExecutorId(Protos.ExecutorID.newBuilder().setValue("").build()) // Set later by ExecutorRequirement
+                .setFrameworkId(frameworkId)
+                .setExecutorId(ExecutorUtils.toExecutorId(""))
+                .addResources(ResourceUtils.getDesiredScalar(role, principal, "cpus", 0.01))
                 .build();
     }
 
@@ -485,6 +488,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
 
         HealthCheckSpec healthCheckSpec = taskSpec.getHealthCheck().get();
         taskInfo.getHealthCheckBuilder()
+                .setType(Protos.HealthCheck.Type.COMMAND)
                 .setDelaySeconds(healthCheckSpec.getDelay())
                 .setIntervalSeconds(healthCheckSpec.getInterval())
                 .setTimeoutSeconds(healthCheckSpec.getTimeout())

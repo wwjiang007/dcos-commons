@@ -54,7 +54,7 @@ public class ExecutorRequirement {
 
     private ExecutorRequirement(ExecutorInfo executorInfo)
             throws InvalidRequirementException {
-        validateExecutorInfo(executorInfo);
+        //validateExecutorInfo(executorInfo);
         this.executorInfo = executorInfo;
     }
 
