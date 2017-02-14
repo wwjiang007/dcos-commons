@@ -22,11 +22,11 @@ pods:
           SLEEP_DURATION: 1000
       once:
         goal: FINISHED
-        cmd: "echo 'I run only once' >> hello-container-path/output"
+        cmd: "echo 'I run only once' >> hello-container-path/output && sleep $SLEEP_DURATION"
         resource-set: sidecar-resources
       sidecar:
         goal: FINISHED
-        cmd: "echo 'sidecar' >> hello-container-path/output"
+        cmd: "echo 'sidecar' >> hello-container-path/output && sleep $SLEEP_DURATION"
         resource-set: sidecar-resources
 plans:
   deploy:

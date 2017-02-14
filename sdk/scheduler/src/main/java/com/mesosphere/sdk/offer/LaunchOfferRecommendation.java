@@ -1,6 +1,7 @@
 package com.mesosphere.sdk.offer;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Offer.Operation;
 import org.apache.mesos.Protos.TaskInfo;
@@ -25,12 +26,20 @@ public class LaunchOfferRecommendation implements OfferRecommendation {
         }
         this.taskInfo = taskInfoBuilder.build();
 
-        // The packed TaskInfo is only used in the launch operation itself, which is what we pass to Mesos.
-        // The rest of the Scheduler uses unpacked TaskInfos.
+        Protos.TaskGroupInfo taskGroupInfo = Protos.TaskGroupInfo.newBuilder()
+                .addTasks(taskInfo.toBuilder().clearExecutor())
+                .build();
+
+        Protos.ExecutorInfo executorInfo = taskInfo.getExecutor();
+
+        Operation.LaunchGroup launchGroup = Operation.LaunchGroup.newBuilder()
+                .setTaskGroup(taskGroupInfo)
+                .setExecutor(executorInfo)
+                .build();
+
         this.operation = Operation.newBuilder()
-                .setType(Operation.Type.LAUNCH)
-                .setLaunch(Operation.Launch.newBuilder()
-                        .addTaskInfos(CommonTaskUtils.packTaskInfo(this.taskInfo)))
+                .setType(Operation.Type.LAUNCH_GROUP)
+                .setLaunchGroup(launchGroup)
                 .build();
     }
 

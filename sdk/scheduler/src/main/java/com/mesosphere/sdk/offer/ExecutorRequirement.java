@@ -95,10 +95,6 @@ public class ExecutorRequirement {
      */
     private static void validateExecutorInfo(ExecutorInfo executorInfo)
             throws InvalidRequirementException {
-        if (!executorInfo.hasName() || StringUtils.isEmpty(executorInfo.getName())) {
-            throw new InvalidRequirementException(String.format(
-                    "ExecutorInfo must have a name: %s", executorInfo));
-        }
         if (executorInfo.hasExecutorId()
                 && !StringUtils.isEmpty(executorInfo.getExecutorId().getValue())) {
             // Executor ID may be included if this is replacing an existing task. In that case, we

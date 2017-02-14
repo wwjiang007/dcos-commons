@@ -52,7 +52,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
                 podInstance.getPod().getType(),
                 podInstance.getIndex(),
                 getNewTaskInfos(podInstance, tasksToLaunch, serviceName, targetConfigurationId),
-                null,
+                getExecutor(podInstance, serviceName, targetConfigurationId),
                 podInstance.getPod().getPlacementRule());
     }
 
@@ -96,7 +96,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
                 podInstance.getPod().getType(),
                 podInstance.getIndex(),
                 taskRequirements,
-                null,
+                ExecutorRequirement.create(getExecutor(podInstance, serviceName, targetConfigurationId)),
                 podInstance.getPod().getPlacementRule());
     }
 
@@ -466,70 +466,10 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
 
     private static Protos.ExecutorInfo getNewExecutorInfo(
             PodSpec podSpec, String serviceName, UUID targetConfigurationId) throws IllegalStateException {
-        Protos.ExecutorInfo.Builder executorInfoBuilder = Protos.ExecutorInfo.newBuilder()
-                .setName(podSpec.getType())
-                .setExecutorId(Protos.ExecutorID.newBuilder().setValue("").build()); // Set later by ExecutorRequirement
-
-        if (podSpec.getContainer().isPresent()) {
-            executorInfoBuilder.setContainer(getContainerInfo(podSpec.getContainer().get()));
-        }
-
-        // command and user:
-
-        Protos.CommandInfo.Builder executorCommandBuilder = executorInfoBuilder.getCommandBuilder().setValue(
-                "export LD_LIBRARY_PATH=$MESOS_SANDBOX/libmesos-bundle/lib:$LD_LIBRARY_PATH && " +
-                "export MESOS_NATIVE_JAVA_LIBRARY=$(ls $MESOS_SANDBOX/libmesos-bundle/lib/libmesos-*.so) && " +
-                "export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jre*/) && " +
-                "./executor/bin/executor");
-
-        if (podSpec.getUser().isPresent()) {
-            executorCommandBuilder.setUser(podSpec.getUser().get());
-        }
-
-        // URIs:
-
-        // Required in scheduler env.
-        String executorUri = System.getenv(EXECUTOR_URI);
-        if (executorUri == null) {
-            throw new IllegalStateException("Missing required environment variable: " + EXECUTOR_URI);
-        }
-        executorCommandBuilder.addUrisBuilder().setValue(executorUri);
-
-        // Required in scheduler env.
-        String libmesosUri = System.getenv(LIBMESOS_URI);
-        if (libmesosUri == null) {
-            throw new IllegalStateException("Missing required environment variable: " + LIBMESOS_URI);
-        }
-        executorCommandBuilder.addUrisBuilder().setValue(libmesosUri);
-
-        // Reuse scheduler's JAVA_URI for executors when available, or fall back to default.
-        String javaUri = System.getenv(JAVA_URI);
-        if (javaUri == null) {
-            javaUri = DEFAULT_JAVA_URI;
-        }
-        executorCommandBuilder.addUrisBuilder().setValue(javaUri);
-
-        // Any URIs defined in PodSpec itself.
-        for (URI uri : podSpec.getUris()) {
-            executorCommandBuilder.addUrisBuilder().setValue(uri.toString());
-        }
-
-        // Finally any URIs for config templates defined in TaskSpecs.
-        for (TaskSpec taskSpec : podSpec.getTasks()) {
-            for (ConfigFileSpec config : taskSpec.getConfigFiles()) {
-                executorCommandBuilder.addUrisBuilder()
-                        .setValue(ArtifactResource.getTemplateUrl(
-                                serviceName,
-                                targetConfigurationId,
-                                podSpec.getType(),
-                                taskSpec.getName(),
-                                config.getName()))
-                        .setOutputFile(getConfigTemplateDownloadPath(config))
-                        .setExtract(false);
-            }
-        }
-
-        return executorInfoBuilder.build();
+        return Protos.ExecutorInfo.newBuilder()
+                .setType(Protos.ExecutorInfo.Type.DEFAULT)
+                .setExecutorId(Protos.ExecutorID.newBuilder().setValue("").build()) // Set later by ExecutorRequirement
+                .build();
     }
 
     private static void setHealthCheck(
