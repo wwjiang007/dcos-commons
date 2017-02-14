@@ -14,6 +14,7 @@ public class ServiceSpecTest extends BaseServiceSpecTest {
         ENV_VARS.set("FRAMEWORK_NAME", "couchbase");
         ENV_VARS.set("COUCHBASE_VERSION", "4.5.1");
         ENV_VARS.set("COUCHBASE_INSTALLER_LOCATION", "https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm");
+        ENV_VARS.set("COUCHBASE_ADMIN_PASSWORD", "password");
         ENV_VARS.set("DATA_SERVICE_COUNT", "1");
         ENV_VARS.set("DATA_SERVICE_CPUS", "4");
         ENV_VARS.set("DATA_SERVICE_MEM", "4096");
@@ -30,7 +31,10 @@ public class ServiceSpecTest extends BaseServiceSpecTest {
         ENV_VARS.set("QUERY_SERVICE_COUNT", "1");
         ENV_VARS.set("QUERY_SERVICE_CPUS", "4");
         ENV_VARS.set("QUERY_SERVICE_MEM", "4096");
-        ENV_VARS.set("QUERY_SERVICE_DISK", "15360");        
+        ENV_VARS.set("QUERY_SERVICE_DISK", "15360");
+        ENV_VARS.set("DEMO_DATA_INSTALL_BEER_SAMPLE", "true"); 
+        ENV_VARS.set("DEMO_DATA_INSTALL_TRAVEL_SAMPLE", "true"); 
+        ENV_VARS.set("DEMO_DATA_INSTALL_GAMESIM_SAMPLE", "true");         
         ENV_VARS.set("SLEEP_DURATION", "1000");
     }
 

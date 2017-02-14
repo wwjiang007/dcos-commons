@@ -13,7 +13,8 @@
   "env": {
     "FRAMEWORK_NAME": "{{service.name}}",
     "COUCHBASE_VERSION": "{{couchbase.version}}",
-    "COUCHBASE_INSTALLER_LOCATION": "{{couchbase.installer_location}}",        
+    "COUCHBASE_INSTALLER_LOCATION": "{{couchbase.installer_location}}",
+    "COUCHBASE_ADMIN_PASSWORD": "{{couchbase.admin_password}}",         
     "DATA_SERVICE_COUNT": "{{data-service.count}}",
     "DATA_SERVICE_CPUS": "{{data-service.cpus}}",
     "DATA_SERVICE_MEM": "{{data-service.mem}}",
@@ -34,7 +35,16 @@
     "QUERY_SERVICE_COUNT": "{{query-service.count}}",
     "QUERY_SERVICE_CPUS": "{{query-service.cpus}}",
     "QUERY_SERVICE_MEM": "{{query-service.mem}}",  
-    "QUERY_SERVICE_DISK": "{{query-service.disk}}",        
+    "QUERY_SERVICE_DISK": "{{query-service.disk}}", 
+    {{#demo-data.install-beer-sample}} 
+    "DEMO_DATA_INSTALL_BEER_SAMPLE": "{{demo-data.install-beer-sample}}",
+    {{/demo-data.install-beer-sample}}
+    {{#demo-data.install-travel-sample}}
+    "DEMO_DATA_INSTALL_TRAVEL_SAMPLE": "{{demo-data.install-travel-sample}}",
+    {{/demo-data.install-travel-sample}}
+    {{#demo-data.install-gamesim-sample}}  
+    "DEMO_DATA_INSTALL_GAMESIM_SAMPLE": "{{demo-data.install-gamesim-sample}}",   
+    {{/demo-data.install-gamesim-sample}}        
     "SLEEP_DURATION": "{{service.sleep}}",
     "EXECUTOR_URI": "{{resource.assets.uris.executor-zip}}",
     "LIBMESOS_URI": "{{resource.assets.uris.libmesos-bundle-tar-gz}}"

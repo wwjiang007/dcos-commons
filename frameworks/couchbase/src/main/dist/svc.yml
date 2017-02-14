@@ -4,6 +4,9 @@ pods:
   couchbase_data:
     uris: 
       - {{COUCHBASE_INSTALLER_LOCATION}}
+      - https://s3-us-west-2.amazonaws.com/jharper-public-mesosphere/samples/beer-sample.zip
+      - https://s3-us-west-2.amazonaws.com/jharper-public-mesosphere/samples/travel-sample.zip
+      - https://s3-us-west-2.amazonaws.com/jharper-public-mesosphere/samples/gamesim-sample.zip
     count: {{DATA_SERVICE_COUNT}}
     resource-sets:
       couchbase-resources:
@@ -55,23 +58,38 @@ pods:
       add-data-node:
         goal: FINISHED
         cmd: >
-          /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-add=couchbase-data-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password=password --services=data
+          /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}} --server-add=couchbase-data-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password={{COUCHBASE_ADMIN_PASSWORD}} --services=data
         resource-set: cli-resources
       initialize-cluster:
         goal: FINISHED
         cmd: >
-             /opt/couchbase/bin/couchbase-cli cluster-init -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --cluster-init-username=Administrator --cluster-init-password=password --cluster-init-port=8091 --cluster-init-ramsize={{DATA_SERVICE_MEM_USABLE}} {{#INDEX_SERVICE_ENABLED}}--cluster-index-ramsize={{INDEX_SERVICE_MEM_USABLE}} --index-storage-setting={{INDEX_SERVICE_INDEX_TYPE}}{{/INDEX_SERVICE_ENABLED}} --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index
+             /opt/couchbase/bin/couchbase-cli cluster-init -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --cluster-init-username=Administrator --cluster-init-password={{COUCHBASE_ADMIN_PASSWORD}} --cluster-init-port=8091 --cluster-init-ramsize={{DATA_SERVICE_MEM_USABLE}} {{#INDEX_SERVICE_ENABLED}}--cluster-index-ramsize={{INDEX_SERVICE_MEM_USABLE}} --index-storage-setting={{INDEX_SERVICE_INDEX_TYPE}}{{/INDEX_SERVICE_ENABLED}} --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index
         resource-set: cli-resources
       rename-seed-host:
         goal: FINISHED
         cmd: >
-             curl -vf -X POST -u Administrator:password http://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091/node/controller/rename -d hostname=couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos
+             curl -vf -X POST -u Administrator:{{COUCHBASE_ADMIN_PASSWORD}} http://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091/node/controller/rename -d hostname=couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos
         resource-set: cli-resources
       rebalance-cluster:
         goal: FINISHED
         cmd: >
-            /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password
+            /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}}
         resource-set: cli-resources
+      add-beer-sample-bucket:
+        goal: FINISHED
+        cmd: >
+          curl -vf -u Administrator:{{COUCHBASE_ADMIN_PASSWORD}} http://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091/sampleBuckets/install -X POST -H "Content-Type: application/json" -d '["beer-sample"]'
+        resource-set: cli-resources  
+      add-travel-sample-bucket:
+        goal: FINISHED
+        cmd: >
+          curl -vf -u Administrator:{{COUCHBASE_ADMIN_PASSWORD}} http://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091/sampleBuckets/install -X POST -H "Content-Type: application/json" -d '["travel-sample"]'
+        resource-set: cli-resources  
+      add-gamesim-sample-bucket:
+        goal: FINISHED
+        cmd: >
+          curl -vf -u Administrator:{{COUCHBASE_ADMIN_PASSWORD}} http://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091/sampleBuckets/install -X POST -H "Content-Type: application/json" -d '["gamesim-sample"]'
+        resource-set: cli-resources                                                                       
   couchbase_index:
     uris: 
       - {{COUCHBASE_INSTALLER_LOCATION}}
@@ -126,7 +144,7 @@ pods:
       add-index-node:
         goal: FINISHED
         cmd: >
-          /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-add=couchbase-index-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password=password --services=index
+          /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}} --server-add=couchbase-index-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password={{COUCHBASE_ADMIN_PASSWORD}} --services=index
         resource-set: cli-resources  
   couchbase_query:
     uris: 
@@ -182,7 +200,7 @@ pods:
       add-query-node:
         goal: FINISHED
         cmd: >
-          /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-add=couchbase-query-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password=password --services=query
+          /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}} --server-add=couchbase-query-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password={{COUCHBASE_ADMIN_PASSWORD}} --services=query
         resource-set: cli-resources                                         
 plans:
   deploy:
@@ -213,4 +231,25 @@ plans:
         pod: couchbase_data
         steps:
           - 0: [[rebalance-cluster]]
+{{#DEMO_DATA_INSTALL_BEER_SAMPLE}}
+      load-beer-sample-bucket:
+        strategy: serial
+        pod: couchbase_data
+        steps:
+          - 0: [[add-beer-sample-bucket]]
+{{/DEMO_DATA_INSTALL_BEER_SAMPLE}}
+{{#DEMO_DATA_INSTALL_TRAVEL_SAMPLE}}
+      load-travel-sample-bucket:
+        strategy: serial
+        pod: couchbase_data
+        steps:
+          - 0: [[add-travel-sample-bucket]]
+{{/DEMO_DATA_INSTALL_TRAVEL_SAMPLE}}
+{{#DEMO_DATA_INSTALL_GAMESIM_SAMPLE}}
+      load-gamesim-sample-bucket:
+        strategy: serial
+        pod: couchbase_data
+        steps:
+          - 0: [[add-gamesim-sample-bucket]]
+{{/DEMO_DATA_INSTALL_GAMESIM_SAMPLE}}
                     

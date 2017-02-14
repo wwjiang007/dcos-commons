@@ -40,7 +40,12 @@
             "description":"Location of the installation RPM file",
             "type":"string",
             "default": "https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm"
-          }   
+          },
+          "admin_password":{
+            "description":"Enter the cluster Administrator password",
+            "type":"string",
+            "default": "password"
+          }    
         },
         "required":[
           "version",
@@ -171,6 +176,32 @@
           "mem",
           "disk"
         ]
-      }            
+      },
+      "demo-data":{
+        "description":"Template pod configuration properties",
+        "type":"object",
+        "properties":{
+          "install-beer-sample":{
+            "description":"Installs the beer-sample test bucket.",
+            "type":"boolean",
+            "default":true
+          },         
+		  "install-travel-sample":{
+            "description":"Installs the travel-sample test bucket.",
+            "type":"boolean",
+            "default":true
+          },        
+          "install-gamesim-sample":{
+            "description":"Installs the gamesim-sample test bucket.",
+            "type":"boolean",
+            "default":true
+          }
+        },
+        "required":[
+          "install-beer-sample",        
+          "install-travel-sample",
+          "install-gamesim-sample"
+        ]
+      }                     
     }
 }
