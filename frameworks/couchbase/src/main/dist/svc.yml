@@ -2,6 +2,7 @@ name: {{FRAMEWORK_NAME}}
 web-url: http://proxylite-0-server.{{FRAMEWORK_NAME}}.mesos:4040
 pods:
   couchbase_data:
+    placement: couchbase-eligible:CLUSTER:true
     uris: 
       - {{COUCHBASE_INSTALLER_LOCATION}}
       - https://s3-us-west-2.amazonaws.com/jharper-public-mesosphere/samples/beer-sample.zip
@@ -16,6 +17,51 @@ pods:
           path: couchbase-container-path
           type: ROOT
           size: {{DATA_SERVICE_DISK}}
+        ports:
+          couchbase-web-console:
+            port: 8091
+          design-doc:
+            port: 8092
+          query-rest:
+            port: 8093
+          search-rest:
+            port: 8094
+          internal-index-admin:
+            port: 9100
+          internal-index-scan:
+            port: 9101
+          internal-index-http:
+            port: 9102
+          internal-index-build:
+            port: 9103
+          internal-index-build-catchup:
+            port: 9104
+          internal-index-maintenance:
+            port: 9105
+          internal-rest:
+            port: 9998
+          internal-gsi:
+            port: 9999
+          smart-client-data:
+            port: 11207
+          internal-bucket:
+            port: 11209
+          smart-client-memcached:
+            port: 11210
+          legacy-memcached:
+            port: 11211
+          xdcr-ssl-1:
+            port: 11214
+          xdcr-ssl-2:
+            port: 11215
+          couchbase-web-console-ssl:
+            port: 18091
+          design-doc-ssl:
+            port: 18092
+          query-ssl:
+            port: 18093
+          erlang-port-mapper:
+            port: 4369                                                                                                                                                               
       cli-resources:
         cpus: 1
         memory: 1024     
@@ -91,6 +137,7 @@ pods:
           curl -vf -u Administrator:{{COUCHBASE_ADMIN_PASSWORD}} http://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091/sampleBuckets/install -X POST -H "Content-Type: application/json" -d '["gamesim-sample"]'
         resource-set: cli-resources                                                                       
   couchbase_index:
+    placement: couchbase-eligible:CLUSTER:true  
     uris: 
       - {{COUCHBASE_INSTALLER_LOCATION}}
     count: {{INDEX_SERVICE_COUNT}}
@@ -102,6 +149,51 @@ pods:
           path: couchbase-container-path
           type: ROOT
           size: {{INDEX_SERVICE_DISK}}
+        ports:
+          couchbase-web-console:
+            port: 8091
+          design-doc:
+            port: 8092
+          query-rest:
+            port: 8093
+          search-rest:
+            port: 8094
+          internal-index-admin:
+            port: 9100
+          internal-index-scan:
+            port: 9101
+          internal-index-http:
+            port: 9102
+          internal-index-build:
+            port: 9103
+          internal-index-build-catchup:
+            port: 9104
+          internal-index-maintenance:
+            port: 9105
+          internal-rest:
+            port: 9998
+          internal-gsi:
+            port: 9999
+          smart-client-data:
+            port: 11207
+          internal-bucket:
+            port: 11209
+          smart-client-memcached:
+            port: 11210
+          legacy-memcached:
+            port: 11211
+          xdcr-ssl-1:
+            port: 11214
+          xdcr-ssl-2:
+            port: 11215
+          couchbase-web-console-ssl:
+            port: 18091
+          design-doc-ssl:
+            port: 18092
+          query-ssl:
+            port: 18093
+          erlang-port-mapper:
+            port: 4369
       cli-resources:
         cpus: 1
         memory: 1024     
@@ -147,6 +239,7 @@ pods:
           /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}} --server-add=couchbase-index-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password={{COUCHBASE_ADMIN_PASSWORD}} --services=index
         resource-set: cli-resources  
   couchbase_query:
+    placement: couchbase-eligible:CLUSTER:true  
     uris: 
       - {{COUCHBASE_INSTALLER_LOCATION}}
     count: {{QUERY_SERVICE_COUNT}}
@@ -158,6 +251,51 @@ pods:
           path: couchbase-container-path
           type: ROOT
           size: {{QUERY_SERVICE_DISK}}
+        ports:
+          couchbase-web-console:
+            port: 8091
+          design-doc:
+            port: 8092
+          query-rest:
+            port: 8093
+          search-rest:
+            port: 8094
+          internal-index-admin:
+            port: 9100
+          internal-index-scan:
+            port: 9101
+          internal-index-http:
+            port: 9102
+          internal-index-build:
+            port: 9103
+          internal-index-build-catchup:
+            port: 9104
+          internal-index-maintenance:
+            port: 9105
+          internal-rest:
+            port: 9998
+          internal-gsi:
+            port: 9999
+          smart-client-data:
+            port: 11207
+          internal-bucket:
+            port: 11209
+          smart-client-memcached:
+            port: 11210
+          legacy-memcached:
+            port: 11211
+          xdcr-ssl-1:
+            port: 11214
+          xdcr-ssl-2:
+            port: 11215
+          couchbase-web-console-ssl:
+            port: 18091
+          design-doc-ssl:
+            port: 18092
+          query-ssl:
+            port: 18093
+          erlang-port-mapper:
+            port: 4369       
       cli-resources:
         cpus: 1
         memory: 1024     
