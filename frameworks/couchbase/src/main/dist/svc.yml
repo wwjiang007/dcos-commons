@@ -130,7 +130,7 @@ pods:
       restore-cluster:
         goal: FINISHED
         cmd: >
-             /opt/couchbase/bin/cbbackupmgr restore --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data/backup --repo cluster --host couchbase://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos --username Administrator --password {{COUCHBASE_ADMIN_PASSWORD}} --start 2016-03-22T14_00_16.892277632-07_00 --end 2016-03-22T14_00_16.892277632-07_00 --force-updates 
+             /opt/couchbase/bin/cbbackupmgr restore --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data/backup --repo cluster --host couchbase://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos --username Administrator --password {{COUCHBASE_ADMIN_PASSWORD}} --start $BACKUP_FILENAME --end $BACKUP_FILENAME --force-updates 
         resource-set: cli-resources                
       add-beer-sample-bucket:
         goal: FINISHED
