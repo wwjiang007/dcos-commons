@@ -59,7 +59,7 @@
           "count":{
             "description":"Number of data nodes to create",
             "type":"integer",
-            "default":1
+            "default":3
           },        
           "cpus":{
             "description":"Number of cores available for each Data Service container",

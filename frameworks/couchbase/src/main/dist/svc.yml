@@ -109,7 +109,8 @@ pods:
       initialize-cluster:
         goal: FINISHED
         cmd: >
-             /opt/couchbase/bin/couchbase-cli cluster-init -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --cluster-init-username=Administrator --cluster-init-password={{COUCHBASE_ADMIN_PASSWORD}} --cluster-init-port=8091 --cluster-init-ramsize={{DATA_SERVICE_MEM_USABLE}} {{#INDEX_SERVICE_ENABLED}}--cluster-index-ramsize={{INDEX_SERVICE_MEM_USABLE}} --index-storage-setting={{INDEX_SERVICE_INDEX_TYPE}}{{/INDEX_SERVICE_ENABLED}} --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index
+             /opt/couchbase/bin/couchbase-cli cluster-init -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --cluster-init-username=Administrator --cluster-init-password={{COUCHBASE_ADMIN_PASSWORD}} --cluster-init-port=8091 --cluster-init-ramsize={{DATA_SERVICE_MEM_USABLE}} {{#INDEX_SERVICE_ENABLED}}--cluster-index-ramsize={{INDEX_SERVICE_MEM_USABLE}} --index-storage-setting={{INDEX_SERVICE_INDEX_TYPE}}{{/INDEX_SERVICE_ENABLED}} --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index &&
+             /opt/couchbase/bin/cbbackupmgr config --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data/backup --repo cluster 
         resource-set: cli-resources
       rename-seed-host:
         goal: FINISHED
@@ -121,6 +122,16 @@ pods:
         cmd: >
             /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}}
         resource-set: cli-resources
+      backup-cluster:
+        goal: FINISHED
+        cmd: >
+             /opt/couchbase/bin/cbbackupmgr backup --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data/backup --repo cluster --host couchbase://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos --username Administrator --password {{COUCHBASE_ADMIN_PASSWORD}}
+        resource-set: cli-resources 
+      restore-cluster:
+        goal: FINISHED
+        cmd: >
+             /opt/couchbase/bin/cbbackupmgr restore --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data/backup --repo cluster --host couchbase://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos --username Administrator --password {{COUCHBASE_ADMIN_PASSWORD}} --start 2016-03-22T14_00_16.892277632-07_00 --end 2016-03-22T14_00_16.892277632-07_00 --force-updates 
+        resource-set: cli-resources                
       add-beer-sample-bucket:
         goal: FINISHED
         cmd: >
@@ -390,4 +401,20 @@ plans:
         steps:
           - 0: [[add-gamesim-sample-bucket]]
 {{/DEMO_DATA_INSTALL_GAMESIM_SAMPLE}}
+  backup:
+    strategy: serial
+    phases:
+      backup-cluster:
+        strategy: serial
+        pod: couchbase_data
+        steps:
+          - 0: [[backup-cluster]]
+  restore:
+    strategy: serial
+    phases:
+      backup-cluster:
+        strategy: serial
+        pod: couchbase_data
+        steps:
+          - 0: [[restore-cluster]]          
                     
