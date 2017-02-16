@@ -29,11 +29,7 @@ import java.util.stream.Collectors;
 public class HdfsRecoveryPlanManager extends DefaultRecoveryPlanManager {
     private static final String NN_PHASE_NAME = "permanent-nn-failure-recovery";
     private final Plan replaceNameNodePlan;
-    private Phase nameNodeRecoveryPhase = new DefaultPhase(
-            NN_PHASE_NAME,
-            Collections.emptyList(),
-            new SerialStrategy<>(),
-            Collections.emptyList());
+    private Phase nameNodeRecoveryPhase = new DefaultPhase(NN_PHASE_NAME, Collections.emptyList());
 
     public HdfsRecoveryPlanManager(
             StateStore stateStore,
@@ -58,11 +54,7 @@ public class HdfsRecoveryPlanManager extends DefaultRecoveryPlanManager {
                     .filter(step -> !nnStepNames.contains(step.getName()))
                     .collect(Collectors.toList());
             phases.add(
-                    new DefaultPhase(
-                            phase.getName(),
-                            steps,
-                            new SerialStrategy<>(),
-                            Collections.emptyList()));
+                    new DefaultPhase(phase.getName(), steps);
         }
 
         if (!nameNodeRecoveryPhase.getChildren().isEmpty()) {
@@ -159,10 +151,6 @@ public class HdfsRecoveryPlanManager extends DefaultRecoveryPlanManager {
                         launchConstrainer,
                         stateStore);
 
-        return new DefaultPhase(
-                NN_PHASE_NAME,
-                Arrays.asList(bootstrapStep, nodeStep),
-                new SerialStrategy<>(),
-                Collections.emptyList());
+        return new DefaultPhase(NN_PHASE_NAME, Arrays.asList(bootstrapStep, nodeStep));
     }
 }

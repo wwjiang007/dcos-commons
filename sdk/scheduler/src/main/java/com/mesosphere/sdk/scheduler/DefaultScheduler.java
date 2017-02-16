@@ -138,7 +138,7 @@ public class DefaultScheduler implements Scheduler, Observer {
         private Builder(ServiceSpec serviceSpec) {
             this.serviceSpec = serviceSpec;
         }
-p
+
         /**
          * Returns the {@link ServiceSpec} which was provided via the constructor.
          */
@@ -585,53 +585,6 @@ p
         // whole.
         deploymentPlanManager.getPlan().proceed();
     }
-
-    protected PlanManager getUpgradePlanManager() throws Exception {
-        // get pod types from service spec
-
-        StepFactory stepFactory = new DefaultStepFactory(configStore, stateStore);
-        PodSpec dataPodSpec = serviceSpec.getPods().stream()
-                .filter(podSpec -> podSpec.equals("couchbase_data"))
-                .findAny()
-                .get();
-
-        PodInstance newPodInstance = new DefaultPodInstance(dataPodSpec, dataPodSpec.getCount());
-        PodInstance seedInstance = new DefaultPodInstance(dataPodSpec, 0);
-
-        List<Step> steps = new ArrayList<Step>();
-
-        // add pod N
-        steps.add(stepFactory.getStep(newPodInstance, Collections.singleton("server")));
-        steps.add(stepFactory.getStep(newPodInstance, Collections.singleton("add-data-node")));
-
-        // upgrade pods (N-1)..0
-        for (int i = dataPodSpec.getCount()-1; i >= 0; i--) {
-            PodInstance podInstance = new DefaultPodInstance(dataPodSpec, i);
-            steps.add(stepFactory.getStep(podInstance, Collections.singleton("remove-data-node")));
-
-            Step rebalanceStep = stepFactory.getStep(seedInstance, Collections.singleton("rebalance"));
-            rebalanceStep.setStatus(Status.PENDING);
-            steps.add(rebalanceStep);
-
-            steps.add(stepFactory.getStep(podInstance, Collections.singleton("rm-data")));
-            steps.add(stepFactory.getStep(podInstance, Collections.singleton("server")));
-            steps.add(stepFactory.getStep(podInstance, Collections.singleton("add-data-node")));
-        }
-
-        // remove podN
-        steps.add(stepFactory.getStep(newPodInstance, Collections.singleton("remove-data-node")));
-        steps.add(stepFactory.getStep(newPodInstance, Collections.singleton("rebalance")));
-
-        // TODO: how do we scale down?
-        // 1. unreserve resources
-        // 2. kill task
-        // 3. remove state associated with task
-
-        Phase phase = new DefaultPhase("upgrade", steps, new SerialStrategy<>(), Collections.emptyList());
-        Plan plan = new DefaultPlan("upgrade", Arrays.asList(phase), new SerialStrategy<>());
-        return new DefaultPlanManager(plan);
-    }
-
 
     /**
      * Override this function to inject your own recovery plan manager.
