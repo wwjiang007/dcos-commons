@@ -15,6 +15,7 @@ public class ServiceSpecTest extends BaseServiceSpecTest {
         ENV_VARS.set("COUCHBASE_VERSION", "4.5.1");
         ENV_VARS.set("COUCHBASE_INSTALLER_LOCATION", "https://packages.couchbase.com/releases/4.5.1/couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm");
         ENV_VARS.set("COUCHBASE_ADMIN_PASSWORD", "password");
+        ENV_VARS.set("COUCHBASE_USE_PLACEMENT_CONSTRAINTS", "false");
         ENV_VARS.set("DATA_SERVICE_COUNT", "1");
         ENV_VARS.set("DATA_SERVICE_CPUS", "4");
         ENV_VARS.set("DATA_SERVICE_MEM", "4096");

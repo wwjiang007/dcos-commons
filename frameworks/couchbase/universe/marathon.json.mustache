@@ -14,7 +14,10 @@
     "FRAMEWORK_NAME": "{{service.name}}",
     "COUCHBASE_VERSION": "{{couchbase.version}}",
     "COUCHBASE_INSTALLER_LOCATION": "{{couchbase.installer_location}}",
-    "COUCHBASE_ADMIN_PASSWORD": "{{couchbase.admin_password}}",         
+    "COUCHBASE_ADMIN_PASSWORD": "{{couchbase.admin_password}}",
+    {{#couchbase.use_placement_contraints}}
+    "COUCHBASE_USE_PLACEMENT_CONSTRAINTS": "{{couchbase.use_placement_contraints}}",
+    {{/couchbase.use_placement_contraints}}           
     "DATA_SERVICE_COUNT": "{{data-service.count}}",
     "DATA_SERVICE_CPUS": "{{data-service.cpus}}",
     "DATA_SERVICE_MEM": "{{data-service.mem}}",

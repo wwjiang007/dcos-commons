@@ -45,7 +45,12 @@
             "description":"Enter the cluster Administrator password",
             "type":"string",
             "default": "password"
-          }    
+          },
+          "use_placement_contraints":{
+            "description":"Set to true if you want to use the couchbase-eligible:true placement constraint",
+            "type":"boolean",
+            "default": false
+          }      
         },
         "required":[
           "version",

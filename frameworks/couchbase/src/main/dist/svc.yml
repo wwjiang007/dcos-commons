@@ -2,7 +2,9 @@ name: {{FRAMEWORK_NAME}}
 web-url: http://proxylite-0-server.{{FRAMEWORK_NAME}}.mesos:4040
 pods:
   couchbase_data:
+{{#COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
     placement: couchbase-eligible:CLUSTER:true
+{{/COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
     uris: 
       - {{COUCHBASE_INSTALLER_LOCATION}}
       - https://s3-us-west-2.amazonaws.com/jharper-public-mesosphere/samples/beer-sample.zip
@@ -148,7 +150,9 @@ pods:
           curl -vf -u Administrator:{{COUCHBASE_ADMIN_PASSWORD}} http://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091/sampleBuckets/install -X POST -H "Content-Type: application/json" -d '["gamesim-sample"]'
         resource-set: cli-resources                                                                       
   couchbase_index:
-    placement: couchbase-eligible:CLUSTER:true  
+{{#COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
+    placement: couchbase-eligible:CLUSTER:true
+{{/COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
     uris: 
       - {{COUCHBASE_INSTALLER_LOCATION}}
     count: {{INDEX_SERVICE_COUNT}}
@@ -250,7 +254,9 @@ pods:
           /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}} --server-add=couchbase-index-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password={{COUCHBASE_ADMIN_PASSWORD}} --services=index
         resource-set: cli-resources  
   couchbase_query:
-    placement: couchbase-eligible:CLUSTER:true  
+{{#COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
+    placement: couchbase-eligible:CLUSTER:true
+{{/COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
     uris: 
       - {{COUCHBASE_INSTALLER_LOCATION}}
     count: {{QUERY_SERVICE_COUNT}}
