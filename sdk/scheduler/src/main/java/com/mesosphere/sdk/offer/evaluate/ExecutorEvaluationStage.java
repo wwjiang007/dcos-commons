@@ -5,8 +5,11 @@ import com.mesosphere.sdk.offer.MesosResourcePool;
 import com.mesosphere.sdk.offer.OfferRecommendationSlate;
 import com.mesosphere.sdk.offer.OfferRequirement;
 import org.apache.mesos.Protos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static com.mesosphere.sdk.offer.evaluate.EvaluationOutcome.*;
+import static com.mesosphere.sdk.offer.evaluate.EvaluationOutcome.fail;
+import static com.mesosphere.sdk.offer.evaluate.EvaluationOutcome.pass;
 
 /**
  * This class evaluates an offer against a given {@link OfferRequirement}, ensuring that executor IDs match between
@@ -14,6 +17,7 @@ import static com.mesosphere.sdk.offer.evaluate.EvaluationOutcome.*;
  */
 public class ExecutorEvaluationStage implements OfferEvaluationStage {
     private final Protos.ExecutorID executorId;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * Instantiate with an expected {@link org.apache.mesos.Protos.ExecutorID} to check for in offers. If not found,
@@ -50,17 +54,22 @@ public class ExecutorEvaluationStage implements OfferEvaluationStage {
                     executorInfo.getExecutorId().getValue().toString());
         }
 
+        String msg = "ERROR: message failed to be set";
         // Set executor ID *after* the other check above for its presence:
         Protos.ExecutorID newExecutorId;
-        if (executorId != null) {
+        if (executorId != null && !executorId.getValue().isEmpty()) {
             newExecutorId = executorId;
+            msg = String.format("Offer contains the matching Executor ID: %s", newExecutorId.getValue());
         } else {
             newExecutorId = ExecutorUtils.toExecutorId(executorInfo.getName());
+            msg = String.format("No Executor ID expected, generated: %s", newExecutorId.getValue());
         }
+
         offerRequirement.updateExecutorRequirement(executorInfo.toBuilder()
                 .setExecutorId(newExecutorId)
                 .build());
-        return pass(this, "Offer contains the matching Executor ID");
+
+        return pass(this, msg);
     }
 
     private boolean hasExpectedExecutorId(Protos.Offer offer) {

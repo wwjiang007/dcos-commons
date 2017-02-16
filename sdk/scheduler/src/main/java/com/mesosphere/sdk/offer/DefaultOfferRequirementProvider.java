@@ -1,8 +1,6 @@
 package com.mesosphere.sdk.offer;
 
 import com.google.protobuf.TextFormat;
-import com.mesosphere.sdk.api.ArtifactResource;
-import com.mesosphere.sdk.executor.ExecutorUtils;
 import com.mesosphere.sdk.specification.*;
 import com.mesosphere.sdk.specification.util.RLimit;
 import com.mesosphere.sdk.state.StateStore;
@@ -12,7 +10,6 @@ import org.apache.mesos.Protos.CommandInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -470,8 +467,10 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         return Protos.ExecutorInfo.newBuilder()
                 .setType(Protos.ExecutorInfo.Type.DEFAULT)
                 .setFrameworkId(frameworkId)
-                .setExecutorId(ExecutorUtils.toExecutorId(""))
+                .setExecutorId(Protos.ExecutorID.newBuilder().setValue(""))
                 .addResources(ResourceUtils.getDesiredScalar(role, principal, "cpus", 0.01))
+                .addResources(ResourceUtils.getDesiredScalar(role, principal, "mem", 32))
+                .addResources(ResourceUtils.getDesiredScalar(role, principal, "disk", 5000))
                 .build();
     }
 

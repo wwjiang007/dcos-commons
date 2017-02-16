@@ -107,21 +107,10 @@ public class OfferEvaluator {
             OfferRequirement offerRequirement) throws InvalidRequirementException, TaskException {
         List<OfferEvaluationStage> evaluationPipeline = new ArrayList<>();
 
+        // Placement
         evaluationPipeline.add(new PlacementRuleEvaluationStage(stateStore.fetchTasks()));
-        if (offerRequirement.getExecutorRequirementOptional().isPresent() &&
-                !offerRequirement.getExecutorRequirementOptional().get()
-                        .getExecutorInfo()
-                        .getExecutorId()
-                        .getValue()
-                        .isEmpty()) {
-            evaluationPipeline.add(new ExecutorEvaluationStage(
-                    offerRequirement.getExecutorRequirementOptional().get()
-                            .getExecutorInfo()
-                            .getExecutorId()));
-        } else {
-            evaluationPipeline.add(new ExecutorEvaluationStage());
-        }
 
+        // Task Resources
         Set<String> tasksToLaunch = Stream.concat(
                 podInstanceRequirement.getPodInstance().getPod().getTasks().stream()
                         .filter(t -> podInstanceRequirement.getTasksToLaunch().contains(t.getName()))
@@ -143,11 +132,41 @@ public class OfferEvaluator {
                             offerRequirement.getTaskRequirement(taskName).getTaskInfo(), v.getContainerPath());
                     evaluationPipeline.add(v.getEvaluationStage(taskResource, taskName));
                 }
+            }
+        }
+
+        // Executor Resources
+        if (offerRequirement.getExecutorRequirementOptional().isPresent()){
+            ExecutorRequirement executorRequirement = offerRequirement.getExecutorRequirementOptional().get();
+            List<Resource> resources = executorRequirement.getResourceRequirements().stream()
+                    .map(resourceRequirement -> resourceRequirement.getResource())
+                    .collect(Collectors.toList());
+            resources.forEach(resource -> evaluationPipeline.add(new ResourceEvaluationStage(resource)));
+        }
+
+        // Executor ID
+        if (offerRequirement.getExecutorRequirementOptional().isPresent() &&
+                !offerRequirement.getExecutorRequirementOptional().get()
+                        .getExecutorInfo()
+                        .getExecutorId()
+                        .getValue()
+                        .isEmpty()) {
+            ExecutorRequirement executorRequirement = offerRequirement.getExecutorRequirementOptional().get();
+            evaluationPipeline.add(new ExecutorEvaluationStage(executorRequirement.getExecutorInfo().getExecutorId()));
+        } else {
+            evaluationPipeline.add(new ExecutorEvaluationStage());
+        }
+
+        // Launch
+        for (TaskSpec taskSpec : podInstanceRequirement.getPodInstance().getPod().getTasks()) {
+            String taskName = TaskSpec.getInstanceName(podInstanceRequirement.getPodInstance(), taskSpec);
+            if (tasksToLaunch.contains(taskName)) {
                 evaluationPipeline.add(new LaunchEvaluationStage(taskName));
             }
         }
-        evaluationPipeline.add(new ReservationEvaluationStage(offerRequirement.getResourceIds()));
 
+        // Unreserve leftovers
+        evaluationPipeline.add(new ReservationEvaluationStage(offerRequirement.getResourceIds()));
         return evaluationPipeline;
     }
 

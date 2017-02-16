@@ -21,6 +21,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class OfferEvaluatorTest extends OfferEvaluatorTestBase {
+    @Before
+    public void beforeEach() throws Exception {
+        super.beforeEach();
+        stateStore.storeFrameworkId(TestConstants.FRAMEWORK_ID);
+    }
 
     @Test
     public void testReserveTaskDynamicPort() throws Exception {

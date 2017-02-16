@@ -1,11 +1,12 @@
 package com.mesosphere.sdk.offer;
 
+import com.mesosphere.sdk.offer.evaluate.placement.PlacementRule;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorInfo;
 import org.apache.mesos.Protos.TaskInfo;
-
-import com.mesosphere.sdk.offer.evaluate.placement.PlacementRule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
  * by the provided {@link PlacementRule}s.
  */
 public class OfferRequirement {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OfferRequirement.class);
     private final String type;
     private Map<String, TaskRequirement> taskRequirements;
     private ExecutorRequirement executorRequirement;
@@ -133,14 +135,13 @@ public class OfferRequirement {
     }
 
     public void updateExecutorRequirement(ExecutorInfo executorInfo) {
-        if (getExecutorRequirementOptional().isPresent()) {
-            try {
-                executorRequirement = ExecutorRequirement.create(executorInfo);
-            } catch (InvalidRequirementException e) {
-                // TODO(mrb): Refactor to keep OfferRequirement completely immutable after creation.
-                // In the meantime, we know that creation succeeded previously, and that no operation in the evaluation
-                // logic will modify an ExecutorInfo in such a way as to make it invalid.
-            }
+        try {
+            executorRequirement = ExecutorRequirement.createExecutorRequirement(executorInfo);
+        } catch (InvalidRequirementException e) {
+            LOGGER.error("Failed to update ExecutorRequirement with exception:", e);
+            // TODO(mrb): Refactor to keep OfferRequirement completely immutable after creation.
+            // In the meantime, we know that creation succeeded previously, and that no operation in the evaluation
+            // logic will modify an ExecutorInfo in such a way as to make it invalid.
         }
     }
 

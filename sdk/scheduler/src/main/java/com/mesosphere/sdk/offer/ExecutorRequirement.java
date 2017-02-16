@@ -36,7 +36,7 @@ public class ExecutorRequirement {
         }
     }
 
-    private static ExecutorRequirement createExecutorRequirement(ExecutorInfo executorInfo)
+    public static ExecutorRequirement createExecutorRequirement(ExecutorInfo executorInfo)
             throws InvalidRequirementException{
         return new ExecutorRequirement(executorInfo);
     }

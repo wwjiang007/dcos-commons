@@ -1,6 +1,5 @@
 package com.mesosphere.sdk.executor;
 
-import com.mesosphere.sdk.offer.TaskException;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;

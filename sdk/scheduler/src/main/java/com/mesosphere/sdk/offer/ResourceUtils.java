@@ -477,6 +477,7 @@ public class ResourceUtils {
         for (int i = 0; i < builder.getResourcesCount(); ++i) {
             if (builder.getResources(i).getName().equals(resource.getName())) {
                 builder.setResources(i, resource);
+                return builder;
             }
         }
 
