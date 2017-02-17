@@ -1,10 +1,52 @@
 name: {{FRAMEWORK_NAME}}
 web-url: http://proxylite-0-server.{{FRAMEWORK_NAME}}.mesos:4040
 pods:
+  bootstrap:
+    count: 1
+    uris:
+      - {{COCKROACH_URI}}
+    resource-sets:
+      db-resources:
+        cpus: {{COCKROACH_CPUS}}
+        memory: {{COCKROACH_MEM}}
+        ports:
+          db-port:
+            port: 26257
+            env-key: DB_PORT
+            vip:
+              prefix: bootstrap
+              port: 26257
+          http-port:
+            port: 26258
+            env-key: HTTP_PORT
+        volume:
+          path: cockroach-data
+          size: {{COCKROACH_DISK}}
+          type: ROOT
+    tasks:
+      server:
+        goal: FINISHED
+        resource-set: db-resources
+        cmd: >
+               ./cockroach-beta-20170209.linux-amd64/cockroach start
+               --insecure
+               --store=cockroach-data
+               --advertise-host=$LIBPROCESS_IP
+               --port=$DB_PORT
+               --http-port=$HTTP_PORT
+               --logtostderr
+               --no-color
+               --background &&
+               sleep 180 &&
+               ./cockroach-beta-20170209.linux-amd64/cockroach quit
+               --insecure
+               --host=$LIBPROCESS_IP
+
   cockroach:
     count: {{COCKROACH_COUNT}}
     uris:
       - {{COCKROACH_URI}}
+      - {{BOOTSTRAP_URI}}
     resource-sets:
       db-resources:
         cpus: {{COCKROACH_CPUS}}
@@ -24,18 +66,6 @@ pods:
           size: {{COCKROACH_DISK}}
           type: ROOT
     tasks:
-      bootstrap:
-        goal: RUNNING
-        resource-set: db-resources
-        cmd: >
-               ./cockroach-beta-20170209.linux-amd64/cockroach start
-               --insecure
-               --store=cockroach-data
-               --advertise-host=$LIBPROCESS_IP
-               --port=$DB_PORT
-               --http-port=$HTTP_PORT
-               --logtostderr
-               --no-color
       server:
         goal: RUNNING
         resource-set: db-resources
@@ -48,14 +78,19 @@ pods:
                --http-port=$HTTP_PORT
                --logtostderr
                --no-color
+               --join=bootstrap.{{FRAMEWORK_NAME}}.l4lb.thisdcos.directory:26257
                --join=db.{{FRAMEWORK_NAME}}.l4lb.thisdcos.directory:26257
 plans:
   deploy:
     strategy: parallel
     phases:
+      bootstrap:
+        strategy: parallel
+        pod: bootstrap
+        steps:
+          - default: [[server]]
       db:
-        strategy: serial
+        strategy: parallel
         pod: cockroach
         steps:
-          - 0: [[bootstrap]]
           - default: [[server]]
