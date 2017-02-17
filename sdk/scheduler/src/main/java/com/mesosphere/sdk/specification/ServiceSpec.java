@@ -12,6 +12,9 @@ public interface ServiceSpec extends Configuration {
     @JsonProperty("name")
     String getName();
 
+    @JsonProperty("version")
+    String getVersion();
+
     @JsonProperty("role")
     String getRole();
 

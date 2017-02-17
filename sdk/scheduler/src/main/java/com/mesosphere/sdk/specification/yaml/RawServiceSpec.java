@@ -8,24 +8,26 @@ import java.util.LinkedHashMap;
  * Root of the parsed YAML object model.
  */
 public class RawServiceSpec {
-
     private final String name;
     private final String webUrl;
     private final RawScheduler scheduler;
     private final WriteOnceLinkedHashMap<String, RawPod> pods;
     private final WriteOnceLinkedHashMap<String, RawPlan> plans;
+    private final String version;
 
     private RawServiceSpec(
             @JsonProperty("name") String name,
             @JsonProperty("web-url") String webUrl,
             @JsonProperty("scheduler") RawScheduler scheduler,
             @JsonProperty("pods") WriteOnceLinkedHashMap<String, RawPod> pods,
-            @JsonProperty("plans") WriteOnceLinkedHashMap<String, RawPlan> plans) {
+            @JsonProperty("plans") WriteOnceLinkedHashMap<String, RawPlan> plans,
+            @JsonProperty("version") String version) {
         this.name = name;
         this.webUrl = webUrl;
         this.scheduler = scheduler;
         this.pods = pods;
         this.plans = plans;
+        this.version = version;
     }
 
     public String getName() {
@@ -47,6 +49,8 @@ public class RawServiceSpec {
     public WriteOnceLinkedHashMap<String, RawPlan> getPlans() {
         return plans;
     }
+
+    public String getVersion() { return version; }
 }
 
 

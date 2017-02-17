@@ -307,6 +307,7 @@ public class DefaultScheduler implements Scheduler, Observer {
                 }
             }
 
+            // TODO(mgummelt): Why are we modifying state in a builder?
             // Update/validate config as needed to reflect the new service spec:
             final ConfigurationUpdater.UpdateResult configUpdateResult = updateConfig(
                     serviceSpec,

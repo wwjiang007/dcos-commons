@@ -67,7 +67,8 @@ public class YAMLToInternalMappers {
                 .principal(principal)
                 .apiPort(apiPort)
                 .zookeeperConnection(zookeeper)
-                .webUrl(rawSvcSpec.getWebUrl());
+                .webUrl(rawSvcSpec.getWebUrl())
+                .version(rawSvcSpec.getVersion());
 
         // Add all pods
         List<PodSpec> pods = new ArrayList<>();
