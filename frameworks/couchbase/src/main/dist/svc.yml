@@ -1,5 +1,4 @@
 name: {{FRAMEWORK_NAME}}
-web-url: http://proxylite-0-server.{{FRAMEWORK_NAME}}.mesos:4040
 pods:
   couchbase_data:
 {{#COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
@@ -82,7 +81,7 @@ pods:
         resource-set: couchbase-resources
         cmd: >
           cd $MESOS_SANDBOX/couchbase-container-path &&
-          mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/moxi &&
+          mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/couchbase/backup var/lib/moxi &&
           cd .. &&
           yum -y install openssl &&
           rpm -i couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm &&
@@ -112,7 +111,7 @@ pods:
         goal: FINISHED
         cmd: >
              /opt/couchbase/bin/couchbase-cli cluster-init -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 --cluster-init-username=Administrator --cluster-init-password={{COUCHBASE_ADMIN_PASSWORD}} --cluster-init-port=8091 --cluster-init-ramsize={{DATA_SERVICE_MEM_USABLE}} {{#INDEX_SERVICE_ENABLED}}--cluster-index-ramsize={{INDEX_SERVICE_MEM_USABLE}} --index-storage-setting={{INDEX_SERVICE_INDEX_TYPE}}{{/INDEX_SERVICE_ENABLED}} --node-init-data-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data --node-init-index-path==$MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index &&
-             /opt/couchbase/bin/cbbackupmgr config --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data/backup --repo cluster 
+             /opt/couchbase/bin/cbbackupmgr config --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/backup --repo cluster 
         resource-set: cli-resources
       rename-seed-host:
         goal: FINISHED
@@ -127,12 +126,12 @@ pods:
       backup-cluster:
         goal: FINISHED
         cmd: >
-             /opt/couchbase/bin/cbbackupmgr backup --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data/backup --repo cluster --host couchbase://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos --username Administrator --password {{COUCHBASE_ADMIN_PASSWORD}}
+             /opt/couchbase/bin/cbbackupmgr backup --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/backup --repo cluster --host couchbase://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos --username Administrator --password {{COUCHBASE_ADMIN_PASSWORD}}
         resource-set: cli-resources 
       restore-cluster:
         goal: FINISHED
         cmd: >
-             /opt/couchbase/bin/cbbackupmgr restore --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data/backup --repo cluster --host couchbase://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos --username Administrator --password {{COUCHBASE_ADMIN_PASSWORD}} --start $BACKUP_FILENAME --end $BACKUP_FILENAME --force-updates 
+             /opt/couchbase/bin/cbbackupmgr restore --archive $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/backup --repo cluster --host couchbase://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos --username Administrator --password {{COUCHBASE_ADMIN_PASSWORD}} --start $BACKUP_FILENAME --end $BACKUP_FILENAME --force-updates 
         resource-set: cli-resources                
       add-beer-sample-bucket:
         goal: FINISHED
