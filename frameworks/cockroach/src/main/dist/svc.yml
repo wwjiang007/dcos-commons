@@ -1,0 +1,52 @@
+name: {{FRAMEWORK_NAME}}
+pods:
+  cockroach:
+    count: {{COCKROACH_COUNT}}
+    uris:
+      - {{COCKROACH_URI}}
+      - {{BOOTSTRAP_URI}}
+    resource-sets:
+      db-resources:
+        cpus: {{COCKROACH_CPUS}}
+        memory: {{COCKROACH_MEM}}
+        ports:
+          db-port:
+            port: 26257
+            env-key: DB_PORT
+          http-port:
+            port: 26258
+            env-key: HTTP_PORT
+        volume:
+          path: cockroach-data
+          size: {{COCKROACH_DISK}}
+          type: ROOT
+    tasks:
+      bootstrap:
+        goal: RUNNING
+        resource-set: db-resources
+        cmd: >
+               ./bootstrap && ./cockroach-beta-20170209.linux-amd64/cockroach start
+               --insecure
+               --store=cockroach-data
+               --port=26527
+               --http-port=26258
+      server:
+        goal: RUNNING
+        resource-set: db-resources
+        cmd: >
+               ./bootstrap && ./cockroach-beta-20170209.linux-amd64/cockroach start
+               --insecure
+               --store=cockroach-data
+               --port=26527
+               --http-port=26528
+               --join=cockroach-0-bootstrap.{{FRAMEWORK_NAME}}.mesos:26527
+plans:
+  deploy:
+    strategy: parallel
+    phases:
+      db:
+        strategy: serial
+        pod: cockroach
+        steps:
+          - 0: [[bootstrap]]
+          - default: [[server]]

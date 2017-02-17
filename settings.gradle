@@ -35,3 +35,6 @@ project(":frameworks/proxylite").name = "proxylite"
 
 include 'frameworks/cassandra'
 project(":frameworks/cassandra").name = "cassandra"
+
+include 'frameworks/cockroach'
+project(":frameworks/cockroach").name = "cockroach"

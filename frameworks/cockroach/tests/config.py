@@ -1,0 +1,2 @@
+PACKAGE_NAME = 'cockroach'
+DEFAULT_TASK_COUNT = 1
