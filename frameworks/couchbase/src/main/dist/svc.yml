@@ -85,7 +85,7 @@ pods:
           mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/couchbase/backup var/lib/moxi &&
           cd .. &&
           yum -y install openssl &&
-          rpm -i couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm &&
+          rpm -i couchbase-server-enterprise-*.rpm &&
           chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
           cd /opt/couchbase/var/lib/couchbase &&
           rm -rf config/ stats/ logs/ crash/ data/ &&
@@ -246,7 +246,7 @@ pods:
           mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/moxi &&
           cd .. &&
           yum -y install openssl &&
-          rpm -i couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm &&
+          rpm -i couchbase-server-enterprise-*.rpm &&
           chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
           cd /opt/couchbase/var/lib/couchbase &&
           rm -rf config/ stats/ logs/ crash/ data/ &&
@@ -361,7 +361,7 @@ pods:
           mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/moxi &&
           cd .. &&
           yum -y install openssl &&
-          rpm -i couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm &&
+          rpm -i couchbase-server-enterprise-*.rpm &&
           chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
           cd /opt/couchbase/var/lib/couchbase &&
           rm -rf config/ stats/ logs/ crash/ data/ &&
@@ -387,7 +387,7 @@ pods:
       refresh-node:
         goal: FINISHED
         cmd: >
-          /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-remove=couchbase-index-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 &&
+          /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-remove=couchbase-query-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 &&
           rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config &&
           rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs &&
           rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats &&
