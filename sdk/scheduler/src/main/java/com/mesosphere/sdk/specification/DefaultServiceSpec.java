@@ -36,14 +36,10 @@ public class DefaultServiceSpec implements ServiceSpec {
     @NotNull(message = "Service name cannot be empty")
     @Size(min = 1, message = "Service name cannot be empty")
     private String name;
-    private String role;
-    private String principal;
 
     @NotNull
     @Min(value = 0, message = "API port value should be >= 0")
     private Integer apiPort;
-    private String webUrl;
-    private String zookeeperConnection;
 
     @Valid
     @NotNull
@@ -54,6 +50,12 @@ public class DefaultServiceSpec implements ServiceSpec {
     @Valid
     private ReplacementFailurePolicy replacementFailurePolicy;
 
+    private String role;
+    private String principal;
+    private String webUrl;
+    private String zookeeperConnection;
+    private String version;
+
     @JsonCreator
     public DefaultServiceSpec(
             @JsonProperty("name") String name,
@@ -63,6 +65,7 @@ public class DefaultServiceSpec implements ServiceSpec {
             @JsonProperty("web-url") String webUrl,
             @JsonProperty("zookeeper") String zookeeperConnection,
             @JsonProperty("pod-specs") List<PodSpec> pods,
+            @JsonProperty("version") String version,
             @JsonProperty("replacement-failure-policy") ReplacementFailurePolicy replacementFailurePolicy) {
         this.name = name;
         this.role = role;
@@ -74,6 +77,7 @@ public class DefaultServiceSpec implements ServiceSpec {
                 ? DEFAULT_ZK_CONNECTION : zookeeperConnection;
         this.pods = pods;
         this.replacementFailurePolicy = replacementFailurePolicy;
+        this.version = version;
         ValidationUtils.validate(this);
     }
 
@@ -86,6 +90,7 @@ public class DefaultServiceSpec implements ServiceSpec {
                 builder.webUrl,
                 builder.zookeeperConnection,
                 builder.pods,
+                builder.version,
                 builder.replacementFailurePolicy);
     }
 
@@ -140,6 +145,8 @@ public class DefaultServiceSpec implements ServiceSpec {
     public List<PodSpec> getPods() {
         return pods;
     }
+
+    public String getVersion() { return version; }
 
     @Override
     public ReplacementFailurePolicy getReplacementFailurePolicy() {
@@ -283,6 +290,7 @@ public class DefaultServiceSpec implements ServiceSpec {
         private String principal;
         private Integer apiPort;
         private String webUrl;
+        private String version;
         private String zookeeperConnection;
         private List<PodSpec> pods = new ArrayList<>();
         private ReplacementFailurePolicy replacementFailurePolicy;
@@ -381,6 +389,11 @@ public class DefaultServiceSpec implements ServiceSpec {
             return this;
         }
 
+        public Builder version(String version) {
+            this.version = version;
+            return this;
+        }
+
         /**
          * Sets the {@code replacementFailurePolicy} and returns a reference to this Builder so that the methods can be
          * chained together.
@@ -401,5 +414,6 @@ public class DefaultServiceSpec implements ServiceSpec {
         public DefaultServiceSpec build() {
             return new DefaultServiceSpec(this);
         }
+
     }
 }

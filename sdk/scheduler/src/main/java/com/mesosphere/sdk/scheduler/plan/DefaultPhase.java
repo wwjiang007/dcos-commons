@@ -1,5 +1,6 @@
 package com.mesosphere.sdk.scheduler.plan;
 
+import com.mesosphere.sdk.scheduler.plan.strategy.SerialStrategy;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.mesos.Protos;
@@ -7,9 +8,7 @@ import com.mesosphere.sdk.scheduler.ChainedObserver;
 import com.mesosphere.sdk.scheduler.Observable;
 import com.mesosphere.sdk.scheduler.plan.strategy.Strategy;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * The Default Phase implementation tracks {@link Step}s both by their UUID and by their ordering. It is an immutable
@@ -32,6 +31,10 @@ public class DefaultPhase extends ChainedObserver implements Phase {
         this.errors = errors;
 
         getChildren().forEach(step -> step.subscribe(this));
+    }
+
+    public DefaultPhase(String name, List<Step> steps) {
+        this(name, steps, new SerialStrategy<>(), Collections.emptyList());
     }
 
     @Override

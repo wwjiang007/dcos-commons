@@ -189,17 +189,17 @@
           "install-beer-sample":{
             "description":"Installs the beer-sample test bucket.",
             "type":"boolean",
-            "default":true
+            "default":false
           },         
 		  "install-travel-sample":{
             "description":"Installs the travel-sample test bucket.",
             "type":"boolean",
-            "default":true
+            "default":false
           },        
           "install-gamesim-sample":{
             "description":"Installs the gamesim-sample test bucket.",
             "type":"boolean",
-            "default":true
+            "default":false
           }
         },
         "required":[

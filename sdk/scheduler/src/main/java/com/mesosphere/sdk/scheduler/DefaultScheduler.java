@@ -5,6 +5,8 @@ import com.google.protobuf.TextFormat;
 import com.mesosphere.sdk.scheduler.recovery.RecoveryPlanManagerFactory;
 import com.mesosphere.sdk.scheduler.recovery.constrain.LaunchConstrainer;
 import com.mesosphere.sdk.scheduler.recovery.monitor.FailureMonitor;
+import com.mesosphere.sdk.scheduler.plan.strategy.SerialStrategy;
+import com.mesosphere.sdk.specification.*;
 import com.mesosphere.sdk.specification.yaml.RawServiceSpec;
 import com.mesosphere.sdk.state.*;
 import com.mesosphere.sdk.offer.evaluate.OfferEvaluator;
@@ -36,10 +38,6 @@ import com.mesosphere.sdk.scheduler.recovery.TaskFailureListener;
 import com.mesosphere.sdk.scheduler.recovery.constrain.TimedLaunchConstrainer;
 import com.mesosphere.sdk.scheduler.recovery.monitor.NeverFailureMonitor;
 import com.mesosphere.sdk.scheduler.recovery.monitor.TimedFailureMonitor;
-import com.mesosphere.sdk.specification.DefaultPlanGenerator;
-import com.mesosphere.sdk.specification.DefaultServiceSpec;
-import com.mesosphere.sdk.specification.ReplacementFailurePolicy;
-import com.mesosphere.sdk.specification.ServiceSpec;
 import com.mesosphere.sdk.specification.validation.CapabilityValidator;
 import com.mesosphere.sdk.specification.yaml.RawPlan;
 
@@ -309,6 +307,7 @@ public class DefaultScheduler implements Scheduler, Observer {
                 }
             }
 
+            // TODO(mgummelt): Why are we modifying state in a builder?
             // Update/validate config as needed to reflect the new service spec:
             final ConfigurationUpdater.UpdateResult configUpdateResult = updateConfig(
                     serviceSpec,
@@ -572,17 +571,18 @@ public class DefaultScheduler implements Scheduler, Observer {
         Plan deployPlan;
         if (!deploy.isPresent()) {
             LOGGER.info("No deploy plan provided. Generating one");
-             deployPlan = new DefaultPlanFactory(
-                     new DefaultPhaseFactory(new DefaultStepFactory(configStore, stateStore)))
-                     .getPlan(serviceSpec);
+            deployPlan = new DefaultPlanFactory(
+                           new DefaultPhaseFactory(
+                             new DefaultStepFactory(configStore, stateStore)))
+                         .getPlan(serviceSpec);
         } else {
             deployPlan = deploy.get();
         }
         deploymentPlanManager = new DefaultPlanManager(deployPlan);
 
         // All plans are initially created with an interrupted strategy. We generally don't want the deployment plan to
-        // start out interrupted. CanaryStrategy is an exception which explicitly indicates that the deployment plan
-        // should start out interrupted, but CanaryStrategies are only applied to individual Phases, not the Plan as a
+        // getRequirement out interrupted. CanaryStrategy is an exception which explicitly indicates that the deployment plan
+        // should getRequirement out interrupted, but CanaryStrategies are only applied to individual Phases, not the Plan as a
         // whole.
         deploymentPlanManager.getPlan().proceed();
     }

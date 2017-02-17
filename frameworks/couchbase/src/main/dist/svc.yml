@@ -1,4 +1,5 @@
 name: {{FRAMEWORK_NAME}}
+version: {{COUCHBASE_VERSION}}
 pods:
   couchbase_data:
 {{#COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
@@ -74,7 +75,7 @@ pods:
           hard: 40960
         RLIMIT_CORE:
           soft: 15728640
-          hard: 15728640  
+          hard: 15728640
     tasks:
       server:
         goal: RUNNING
@@ -84,7 +85,7 @@ pods:
           mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/couchbase/backup var/lib/moxi &&
           cd .. &&
           yum -y install openssl &&
-          rpm -i couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm &&
+          rpm -i couchbase-server-enterprise-*.rpm &&
           chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
           cd /opt/couchbase/var/lib/couchbase &&
           rm -rf config/ stats/ logs/ crash/ data/ &&
@@ -106,6 +107,11 @@ pods:
         goal: FINISHED
         cmd: >
           /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}} --server-add=couchbase-data-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password={{COUCHBASE_ADMIN_PASSWORD}} --services=data
+        resource-set: cli-resources
+      add-seed-data-node:
+        goal: FINISHED
+        cmd: >
+          /opt/couchbase/bin/couchbase-cli server-add -c couchbase-index-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}} --server-add=couchbase-data-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password={{COUCHBASE_ADMIN_PASSWORD}} --services=data
         resource-set: cli-resources
       initialize-cluster:
         goal: FINISHED
@@ -147,7 +153,18 @@ pods:
         goal: FINISHED
         cmd: >
           curl -vf -u Administrator:{{COUCHBASE_ADMIN_PASSWORD}} http://couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091/sampleBuckets/install -X POST -H "Content-Type: application/json" -d '["gamesim-sample"]'
-        resource-set: cli-resources                                                                       
+        resource-set: cli-resources
+      refresh-node:
+        goal: FINISHED
+        cmd: >
+          /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-index-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-remove=couchbase-data-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash
+        resource-set: cli-resources
   couchbase_index:
 {{#COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
     placement: couchbase-eligible:CLUSTER:true
@@ -219,7 +236,7 @@ pods:
           hard: 40960
         RLIMIT_CORE:
           soft: 15728640
-          hard: 15728640  
+          hard: 15728640
     tasks:
       server:
         goal: RUNNING
@@ -229,7 +246,7 @@ pods:
           mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/moxi &&
           cd .. &&
           yum -y install openssl &&
-          rpm -i couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm &&
+          rpm -i couchbase-server-enterprise-*.rpm &&
           chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
           cd /opt/couchbase/var/lib/couchbase &&
           rm -rf config/ stats/ logs/ crash/ data/ &&
@@ -251,7 +268,18 @@ pods:
         goal: FINISHED
         cmd: >
           /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}} --server-add=couchbase-index-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password={{COUCHBASE_ADMIN_PASSWORD}} --services=index
-        resource-set: cli-resources  
+        resource-set: cli-resources
+      refresh-node:
+        goal: FINISHED
+        cmd: >
+          /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-remove=couchbase-index-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash
+        resource-set: cli-resources
   couchbase_query:
 {{#COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
     placement: couchbase-eligible:CLUSTER:true
@@ -323,7 +351,7 @@ pods:
           hard: 40960
         RLIMIT_CORE:
           soft: 15728640
-          hard: 15728640  
+          hard: 15728640
     tasks:
       server:
         goal: RUNNING
@@ -333,7 +361,7 @@ pods:
           mkdir -p var/lib/couchbase var/lib/couchbase/crash var/lib/couchbase/config var/lib/couchbase/stats var/lib/couchbase/index var/lib/couchbase/logs var/lib/couchbase/data var/lib/moxi &&
           cd .. &&
           yum -y install openssl &&
-          rpm -i couchbase-server-enterprise-4.5.1-centos7.x86_64.rpm &&
+          rpm -i couchbase-server-enterprise-*.rpm &&
           chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
           cd /opt/couchbase/var/lib/couchbase &&
           rm -rf config/ stats/ logs/ crash/ data/ &&
@@ -355,71 +383,82 @@ pods:
         goal: FINISHED
         cmd: >
           /opt/couchbase/bin/couchbase-cli server-add -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p {{COUCHBASE_ADMIN_PASSWORD}} --server-add=couchbase-query-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 --server-add-username=Administrator --server-add-password={{COUCHBASE_ADMIN_PASSWORD}} --services=query
-        resource-set: cli-resources                                         
-plans:
-  deploy:
-    strategy: serial
-    phases:
-      setup-data-nodes:
-        strategy: serial
-        pod: couchbase_data
-        steps:
-          - 0: [[server], [initialize-cluster], [rename-seed-host]]
-          - default: [[server], [add-data-node]]
-{{#INDEX_SERVICE_ENABLED}}
-      setup-index-nodes:
-        strategy: serial
-        pod: couchbase_index
-        steps:
-          - default: [[server], [add-index-node]]
-{{/INDEX_SERVICE_ENABLED}}
-{{#QUERY_SERVICE_ENABLED}}
-      setup-query-nodes:
-        strategy: serial
-        pod: couchbase_query
-        steps:
-          - default: [[server], [add-query-node]]
-{{/QUERY_SERVICE_ENABLED}}
-      rebalance-cluster:
-        strategy: serial
-        pod: couchbase_data
-        steps:
-          - 0: [[rebalance-cluster]]
-{{#DEMO_DATA_INSTALL_BEER_SAMPLE}}
-      load-beer-sample-bucket:
-        strategy: serial
-        pod: couchbase_data
-        steps:
-          - 0: [[add-beer-sample-bucket]]
-{{/DEMO_DATA_INSTALL_BEER_SAMPLE}}
-{{#DEMO_DATA_INSTALL_TRAVEL_SAMPLE}}
-      load-travel-sample-bucket:
-        strategy: serial
-        pod: couchbase_data
-        steps:
-          - 0: [[add-travel-sample-bucket]]
-{{/DEMO_DATA_INSTALL_TRAVEL_SAMPLE}}
-{{#DEMO_DATA_INSTALL_GAMESIM_SAMPLE}}
-      load-gamesim-sample-bucket:
-        strategy: serial
-        pod: couchbase_data
-        steps:
-          - 0: [[add-gamesim-sample-bucket]]
-{{/DEMO_DATA_INSTALL_GAMESIM_SAMPLE}}
-  backup:
-    strategy: serial
-    phases:
-      backup-cluster:
-        strategy: serial
-        pod: couchbase_data
-        steps:
-          - 0: [[backup-cluster]]
-  restore:
-    strategy: serial
-    phases:
-      backup-cluster:
-        strategy: serial
-        pod: couchbase_data
-        steps:
-          - 0: [[restore-cluster]]          
-                    
+        resource-set: cli-resources
+      refresh-node:
+        goal: FINISHED
+        cmd: >
+          /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-remove=couchbase-query-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index &&
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash
+        resource-set: cli-resources
+#plans:
+#  deploy:
+#    strategy: serial
+#    phases:
+#      setup-data-nodes:
+#        strategy: serial
+#        pod: couchbase_data
+#        steps:
+#          - 0: [[server], [initialize-cluster], [rename-seed-host]]
+#          - default: [[server], [add-data-node]]
+#{{#INDEX_SERVICE_ENABLED}}
+#      setup-index-nodes:
+#        strategy: serial
+#        pod: couchbase_index
+#        steps:
+#          - default: [[server], [add-index-node]]
+#{{/INDEX_SERVICE_ENABLED}}
+#{{#QUERY_SERVICE_ENABLED}}
+#      setup-query-nodes:
+#        strategy: serial
+#        pod: couchbase_query
+#        steps:
+#          - default: [[server], [add-query-node]]
+#{{/QUERY_SERVICE_ENABLED}}
+#      rebalance-cluster:
+#        strategy: serial
+#        pod: couchbase_data
+#        steps:
+#          - 0: [[rebalance-cluster]]
+#{{#DEMO_DATA_INSTALL_BEER_SAMPLE}}
+#      load-beer-sample-bucket:
+#        strategy: serial
+#        pod: couchbase_data
+#        steps:
+#          - 0: [[add-beer-sample-bucket]]
+#{{/DEMO_DATA_INSTALL_BEER_SAMPLE}}
+#{{#DEMO_DATA_INSTALL_TRAVEL_SAMPLE}}
+#      load-travel-sample-bucket:
+#        strategy: serial
+#        pod: couchbase_data
+#        steps:
+#          - 0: [[add-travel-sample-bucket]]
+#{{/DEMO_DATA_INSTALL_TRAVEL_SAMPLE}}
+#{{#DEMO_DATA_INSTALL_GAMESIM_SAMPLE}}
+#      load-gamesim-sample-bucket:
+#        strategy: serial
+#        pod: couchbase_data
+#        steps:
+#          - 0: [[add-gamesim-sample-bucket]]
+#{{/DEMO_DATA_INSTALL_GAMESIM_SAMPLE}}
+#  backup:
+#    strategy: serial
+#    phases:
+#      backup-cluster:
+#        strategy: serial
+#        pod: couchbase_data
+#        steps:
+#          - 0: [[backup-cluster]]
+#  restore:
+#    strategy: serial
+#    phases:
+#      backup-cluster:
+#        strategy: serial
+#        pod: couchbase_data
+#        steps:
+#          - 0: [[restore-cluster]]
+#
