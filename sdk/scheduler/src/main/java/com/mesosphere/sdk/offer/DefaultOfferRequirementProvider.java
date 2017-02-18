@@ -252,7 +252,6 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
             taskInfoBuilder.getCommandBuilder()
                     .setValue(commandSpec.getValue())
                     .setEnvironment(getTaskEnvironment(serviceName, podInstance, taskSpec, commandSpec));
-            setBootstrapConfigFileEnv(taskInfoBuilder.getCommandBuilder(), taskSpec);
             extendEnv(taskInfoBuilder.getCommandBuilder(), environment);
         }
 
@@ -310,9 +309,8 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
             Protos.CommandInfo.Builder commandBuilder = Protos.CommandInfo.newBuilder()
                     .setValue(commandSpec.getValue())
                     .setEnvironment(mergeEnvironments(
-                            getTaskEnvironment(serviceName, podInstance, taskSpec, commandSpec),
-                            taskInfo.getCommand().getEnvironment()));
-            setBootstrapConfigFileEnv(commandBuilder, taskSpec);
+                            getTaskEnvironment(serviceName, podInstance, taskSpec, commandSpec), // primary
+                            taskInfo.getCommand().getEnvironment())); // secondary (overridden by primary)
             // Overwrite any prior CommandInfo:
             taskInfoBuilder.setCommand(commandBuilder);
         }
@@ -322,21 +320,6 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
 
         return new TaskRequirement(
                 taskInfoBuilder.build(), getResourceRequirements(taskSpec, taskInfo.getResourcesList()));
-    }
-
-    private static void setBootstrapConfigFileEnv(
-            CommandInfo.Builder commandInfoBuilder, TaskSpec taskSpec) {
-        if (taskSpec.getConfigFiles() == null) {
-            return;
-        }
-        for (ConfigFileSpec config : taskSpec.getConfigFiles()) {
-            // For use by bootstrap process: an environment variable pointing to (comma-separated):
-            // a. where the template file was downloaded (by the mesos fetcher)
-            // b. where the rendered result should go
-            commandInfoBuilder.getEnvironmentBuilder().addVariablesBuilder()
-                    .setName(String.format(CONFIG_TEMPLATE_KEY_FORMAT, TaskUtils.toEnvName(config.getName())))
-                    .setValue(String.format("%s,%s", getConfigTemplateDownloadPath(config), config.getRelativePath()));
-        }
     }
 
     private static void extendEnv(CommandInfo.Builder builder, Map<String, String> environment) {
@@ -373,21 +356,40 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
 
         // Default envvars for use by executors/developers:
 
-        // Inject Pod Instance Index
+        // Pod Instance Index
         environment.put(POD_INSTANCE_INDEX_TASKENV, String.valueOf(podInstance.getIndex()));
-        // Inject Framework Name
+        // Framework Name
         environment.put(FRAMEWORK_NAME_TASKENV, serviceName);
-        // Inject TASK_NAME as KEY:VALUE
+        // TASK_NAME as KEY:VALUE
         environment.put(TASK_NAME_TASKENV, TaskSpec.getInstanceName(podInstance, taskSpec));
-        // Inject TASK_NAME as KEY for conditional mustache templating
+        // TASK_NAME as KEY for conditional mustache templating
         environment.put(TaskSpec.getInstanceName(podInstance, taskSpec), "true");
+
+        // Config templates for rendering by bootstrap process
+        if (taskSpec.getConfigFiles() != null) {
+            for (ConfigFileSpec config : taskSpec.getConfigFiles()) {
+                // For use by bootstrap process: an environment variable pointing to (comma-separated):
+                // a. where the template file was downloaded (by the mesos fetcher)
+                // b. where the rendered result should go
+                environment.put(
+                        String.format(CONFIG_TEMPLATE_KEY_FORMAT, TaskUtils.toEnvName(config.getName())),
+                        String.format("%s,%s", getConfigTemplateDownloadPath(config), config.getRelativePath()));
+            }
+        }
+
+        // Note: other envvars which are based on the offer contents (eg PORT_<name>=<num> and ATTRIBUTE_<name>=<val>)
+        //       are set within implementations of OfferEvaluationStage.
 
         return CommonTaskUtils.fromMapToEnvironment(environment).build();
     }
 
-    private static Protos.Environment mergeEnvironments(Protos.Environment lhs, Protos.Environment rhs) {
-        Map<String, String> lhsVariables = CommonTaskUtils.fromEnvironmentToMap(lhs);
-        Map<String, String> rhsVariables = CommonTaskUtils.fromEnvironmentToMap(rhs);
+    /**
+     * Returns a combined environment which contains the contents of both {@code primary} and {@code secondary}. Any
+     * values in {@code primary} are given priority over the values in {@code secondary}.
+     */
+    private static Protos.Environment mergeEnvironments(Protos.Environment primary, Protos.Environment secondary) {
+        Map<String, String> lhsVariables = CommonTaskUtils.fromEnvironmentToMap(primary);
+        Map<String, String> rhsVariables = CommonTaskUtils.fromEnvironmentToMap(secondary);
         for (Map.Entry<String, String> entry : rhsVariables.entrySet()) {
             if (!lhsVariables.containsKey(entry.getKey())) {
                 lhsVariables.put(entry.getKey(), entry.getValue());

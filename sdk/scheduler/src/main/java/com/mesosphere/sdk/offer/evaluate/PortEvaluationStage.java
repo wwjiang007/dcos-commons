@@ -32,10 +32,6 @@ public class PortEvaluationStage extends ResourceEvaluationStage implements Offe
         this.port = port;
     }
 
-    public PortEvaluationStage(Protos.Resource resource, String portName, int port) {
-        this(resource, null, portName, port);
-    }
-
     @Override
     public EvaluationOutcome evaluate(MesosResourcePool mesosResourcePool, PodInfoBuilder podInfoBuilder) {
         // If this is from an existing pod with the dynamic port already assigned and reserved, just keep it.

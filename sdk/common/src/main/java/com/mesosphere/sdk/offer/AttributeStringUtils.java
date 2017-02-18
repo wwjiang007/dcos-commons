@@ -45,11 +45,10 @@ public class AttributeStringUtils {
     }
 
     /**
-     * Converts the provided list of zero or more attributes into a string suitable for parsing by
-     * {@link #parseString(String)}.
+     * Converts the provided list of zero or more attributes into a string which may be compared with the string
+     * representation of other attribute lists.
      *
-     * @throws IllegalArgumentException if some part of the provided attributes couldn't be
-     * serialized
+     * @throws IllegalArgumentException if some part of the provided attributes couldn't be serialized
      */
     public static String toString(List<Attribute> attributes) throws IllegalArgumentException {
         StringJoiner joiner = new StringJoiner(ATTRIBUTE_LIST_SEPARATOR);

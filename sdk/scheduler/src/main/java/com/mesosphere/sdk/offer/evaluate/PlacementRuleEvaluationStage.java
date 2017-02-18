@@ -22,6 +22,15 @@ public class PlacementRuleEvaluationStage implements OfferEvaluationStage {
     @Override
     public EvaluationOutcome evaluate(MesosResourcePool mesosResourcePool, PodInfoBuilder podInfoBuilder) {
         OfferRequirement offerRequirement = podInfoBuilder.getOfferRequirement();
+
+        if (getTaskName().isPresent()) {
+            Protos.TaskInfo.Builder taskBuilder = podInfoBuilder.getTaskBuilder(getTaskName().get());
+            taskBuilder.addResources(resource);
+        } else {
+            Protos.ExecutorInfo.Builder executorBuilder = podInfoBuilder.getExecutorBuilder().get();
+            executorBuilder.addResources(resource);
+        }
+
         if (!offerRequirement.getPlacementRuleOptional().isPresent()) {
             return pass(this, "No placement rule defined.");
         }
