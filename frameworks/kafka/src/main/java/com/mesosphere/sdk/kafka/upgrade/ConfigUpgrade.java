@@ -16,7 +16,6 @@ public class ConfigUpgrade {
         // Generate a ConfigStore<SpecStore> from existing ConfigStore<KafkaSchedulerConfiguration>
 
         DefaultServiceSpec.newBuilder().name("kafka");
-
     }
 
     public static boolean checkUpdate(){
@@ -28,6 +27,4 @@ public class ConfigUpgrade {
         }
         return false;
     }
-
-
 }
