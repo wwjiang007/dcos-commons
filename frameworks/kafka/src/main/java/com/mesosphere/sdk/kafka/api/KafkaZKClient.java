@@ -89,15 +89,14 @@ public class KafkaZKClient {
         return (new JSONObject()).put("partitions", partitions);
     }
 
-
+    /* below is copied from kafka-broker-service */
 
     public List<String> getBrokerEndpoints() {
         List<String> endpoints = new ArrayList<String>();
-
         try {
-            List<String> ids = kafkaZkClient.getChildren().forPath(zkConfig.getBrokerIdPath());
+            List<String> ids = zkClient.getChildren().forPath(kafkaZkUri + BROKER_ID_PATH);
             for (String id : ids) {
-                byte[] bytes = kafkaZkClient.getData().forPath(zkConfig.getBrokerIdPath() + "/" + id);
+                byte[] bytes = zkClient.getData().forPath(kafkaZkUri + BROKER_ID_PATH + "/" + id);
                 JSONObject broker = new JSONObject(new String(bytes, "UTF-8"));
                 String host = (String) broker.get("host");
                 Integer port = (Integer) broker.get("port");
@@ -106,19 +105,17 @@ public class KafkaZKClient {
         } catch (Exception ex) {
             log.error("Failed to retrieve broker endpoints with exception: ", ex);
         }
-
         return endpoints;
     }
 
-    public List<String> getBrokerDNSEndpoints() {
+    public List<String> getBrokerDNSEndpoints(String frameworkName) {
         List<String> endpoints = new ArrayList<String>();
-
         try {
-            List<String> ids = kafkaZkClient.getChildren().forPath(zkConfig.getBrokerIdPath());
+            List<String> ids = zkClient.getChildren().forPath(kafkaZkUri + BROKER_ID_PATH);
             for (String id : ids) {
-                byte[] bytes = kafkaZkClient.getData().forPath(zkConfig.getBrokerIdPath() + "/" + id);
+                byte[] bytes = zkClient.getData().forPath(kafkaZkUri + BROKER_ID_PATH + "/" + id);
                 JSONObject broker = new JSONObject(new String(bytes, "UTF-8"));
-                String host = "broker-" + id + "." + zkConfig.getFrameworkName() + ".mesos";
+                String host = "broker-" + id + "." + frameworkName + ".mesos";
                 Integer port = (Integer) broker.get("port");
                 endpoints.add(host + ":" + port);
             }

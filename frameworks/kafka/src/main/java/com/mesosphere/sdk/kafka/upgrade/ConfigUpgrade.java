@@ -41,19 +41,22 @@ import java.util.Collection;
 public class ConfigUpgrade {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ConfigUpgrade.class);
 
-    public static void update(ConfigStore configStore, StateStore stateStore){
-            // Generate a ConfigStore<SpecStore> from existing ConfigStore<KafkaSchedulerConfiguration>
+    public static void update(ConfigStore configStore, StateStore stateStore) {
+        // Generate a ConfigStore<SpecStore> from existing ConfigStore<KafkaSchedulerConfiguration>
 
-            DefaultServiceSpec.newBuilder().name("kafka");
-        }
+        DefaultServiceSpec.newBuilder().name("kafka");
 
-   public static boolean checkUpdate(){
-            if (System.getenv("CONFIG_UPDATE") != null) {
-                LOGGER.info("Kafka Update Configuration Update Mode !");
-                return true;
-            }
-            return false;
-        }
     }
+
+    public static boolean checkUpdate(){
+        if (System.getenv("CONFIG_UPGRADE") != null) {
+            LOGGER.info("++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
+                     + "        Kafka Configuration Update Mode !"
+                     + "++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+            return true;
+        }
+        return false;
+    }
+
 
 }

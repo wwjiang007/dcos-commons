@@ -63,7 +63,7 @@ public class TopicController {
         }
     }
 
-    /* TODO:Below is copied from dcos-kafka-service */
+    /* Below is copied from dcos-kafka-service */
 
     @GET
     @Path("/unavailable_partitions")
