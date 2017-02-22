@@ -2,6 +2,9 @@ package com.mesosphere.sdk.kafka.scheduler;
 
 import com.mesosphere.sdk.config.ConfigStore;
 import com.mesosphere.sdk.kafka.api.BrokerController;
+import com.mesosphere.sdk.kafka.api.KafkaZKClient;
+import com.mesosphere.sdk.kafka.api.TopicController;
+import com.mesosphere.sdk.kafka.cmd.CmdExecutor;
 import com.mesosphere.sdk.scheduler.DefaultScheduler;
 import com.mesosphere.sdk.specification.DefaultService;
 import com.mesosphere.sdk.specification.DefaultServiceSpec;
@@ -26,34 +29,23 @@ public class KafkaService extends DefaultService {
         super(pathToYamlSpecification);
     }
 
-
     @Override
     protected void startApiServer(DefaultScheduler defaultScheduler,
                                   int apiPort,
                                   Collection<Object> additionalResources) {
         final ServiceSpec serviceSpec = super.getServiceSpec();
+
         final Collection<Object> apiResources = new ArrayList<>();
         final String zkUri = String.format("%s/dcos-service-%s",
                 serviceSpec.getZookeeperConnection(), serviceSpec.getName());
-        apiResources.add(new BrokerController(zkUri));
-        if (CollectionUtils.isNotEmpty(additionalResources)) {
-            apiResources.addAll(additionalResources);
-        }
-        LOGGER.info("Starting API server with resources: {}", apiResources);
+        final KafkaZKClient kafkaZKClient = new KafkaZKClient(zkUri);
+
+        apiResources.add(new BrokerController(kafkaZKClient));
+        apiResources.add(new TopicController(new CmdExecutor(kafkaZKClient, System.getenv("KAFKA_VERSION_PATH")),
+                kafkaZKClient));
+
+        apiResources.addAll(additionalResources);
+        LOGGER.info("Starting API server with additional resources: {}", apiResources);
         super.startApiServer(defaultScheduler, apiPort, apiResources);
-    }
-
-    private void updater(ConfigStore configStore, StateStore stateStore){
-        // Generate a ConfigStore<SpecStore> from existing ConfigStore<KafkaSchedulerConfiguration>
-
-        DefaultServiceSpec.newBuilder().name("kafka");
-    }
-
-    private boolean checkUpdate(){
-        if (System.getenv("CONFIG_UPDATE") != null) {
-            LOGGER.info("Kafka Update Configuration Update Mode !");
-            return true;
-        }
-            return false;
     }
 }
