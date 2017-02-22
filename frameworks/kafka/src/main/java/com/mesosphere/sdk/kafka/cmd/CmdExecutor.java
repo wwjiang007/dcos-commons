@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.nio.charset.Charset;
 import java.security.InvalidParameterException;
 import java.util.List;
 
@@ -16,7 +17,11 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.lang.Exception;
+
+
+/**
+ * A simple command executor class, copied from dcos-kafka-service.
+ */
 
 public class CmdExecutor {
     private static final Log log = LogFactory.getLog(CmdExecutor.class);
@@ -27,10 +32,10 @@ public class CmdExecutor {
     private final KafkaZKClient kafkaZkClient;
 
     public CmdExecutor(KafkaZKClient kafkaZkClient, String kafkaStandBoxPath) {
-        if (kafkaStandBoxPath == null ){
+        if (kafkaStandBoxPath == null){
             throw new InvalidParameterException("KAFKA_VERSION_PATH is not set. Can not start CmdExecutor");
         }
-        this.binPath = kafkaStandBoxPath+ "/bin/";
+        this.binPath = kafkaStandBoxPath + "/bin/";
         this.kafkaZkClient = kafkaZkClient;
         this.zkPath = kafkaZkClient.getZKString();
     }
@@ -38,8 +43,10 @@ public class CmdExecutor {
     /* TODO: below is copied from dcos-kafka-service */
 
     public JSONObject createTopic(String name, int partitionCount, int replicationFactor) throws Exception {
-        // e.g. ./kafka-topics.sh --create --zookeeper master.mesos:2181/kafka-0 --topic topic0 --partitions 3 --replication-factor 3
-
+        /*
+         e.g. ./kafka-topics.sh --create --zookeeper master.mesos:2181/kafka-0 --topic topic0 --partitions 3
+          --replication-factor 3
+         */
         List<String> cmd = new ArrayList<String>();
         cmd.add(binPath + "kafka-topics.sh");
         cmd.add("--create");
@@ -56,8 +63,9 @@ public class CmdExecutor {
     }
 
     public JSONObject deleteTopic(String name) throws Exception {
-        // e.g. ./kafka-topics.sh --delete --zookeeper master.mesos:2181/kafka --topic topic0
-
+        /*
+         e.g. ./kafka-topics.sh --delete --zookeeper master.mesos:2181/kafka --topic topic0
+         */
         List<String> cmd = new ArrayList<String>();
         cmd.add(binPath + "kafka-topics.sh");
         cmd.add("--delete");
@@ -70,8 +78,9 @@ public class CmdExecutor {
     }
 
     public JSONObject alterTopic(String name, List<String> cmds) throws Exception {
-        // e.g. ./kafka-topics.sh --zookeeper master.mesos:2181/kafka --alter --topic topic0 --partitions 4
-
+        /*
+        e.g. ./kafka-topics.sh --zookeeper master.mesos:2181/kafka --alter --topic topic0 --partitions 4
+        */
         List<String> cmd = new ArrayList<String>();
         cmd.add(binPath + "kafka-topics.sh");
         cmd.add("--alter");
@@ -85,7 +94,11 @@ public class CmdExecutor {
     }
 
     public JSONObject producerTest(String topicName, int messages) throws Exception {
-        // e.g. ./kafka-producer-perf-test.sh --topic topic0 --num-records 1000 --producer-props bootstrap.servers=ip-10-0-2-171.us-west-2.compute.internal:9092,ip-10-0-2-172.us-west-2.compute.internal:9093,ip-10-0-2-173.us-west-2.compute.internal:9094 --throughput 100000 --record-size 1024
+        /* e.g. ./kafka-producer-perf-test.sh --topic topic0 --num-records 1000 --producer-props
+         bootstrap.servers=
+         ip-10-0-2-171.us-west-2.compute.internal:9092,ip-10-0-2-172.us-west-2.compute.internal:9093,
+         ip-10-0-2-173.us-west-2.compute.internal:9094 --throughput 100000 --record-size 1024
+         */
         List<String> brokerEndpoints = kafkaZkClient.getBrokerEndpoints();
         String brokers = StringUtils.join(brokerEndpoints, ",");
         String bootstrapServers = "bootstrap.servers=" + brokers;
@@ -107,8 +120,12 @@ public class CmdExecutor {
     }
 
     public JSONArray getOffsets(String topicName, Long time) throws Exception {
-        // e.g. ./kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list ip-10-0-1-71.us-west-2.compute.internal:9092,ip-10-0-1-72.us-west-2.compute.internal:9093,ip-10-0-1-68.us-west-2.compute.internal:9094 --topic topic0 --time -1 --partitions 0
-
+        /*
+         e.g. ./kafka-run-class.sh kafka.tools.GetOffsetShell
+         --broker-list ip-10-0-1-71.us-west-2.compute.internal:9092,
+           ip-10-0-1-72.us-west-2.compute.internal:9093,ip-10-0-1-68.us-west-2.compute.internal:9094
+           --topic topic0 --time -1 --partitions 0
+        */
         List<String> brokerEndpoints = kafkaZkClient.getBrokerEndpoints();
         String brokers = StringUtils.join(brokerEndpoints, ",");
 
@@ -198,8 +215,8 @@ public class CmdExecutor {
             log.warn(String.format(
                     "Command failed with code=%d in %dms: %s",
                     exitCode, stopWatch.getTime(), StringUtils.join(cmd, " ")));
-            log.warn(String.format("stdout:\n%s", stdout));
-            log.warn(String.format("stderr:\n%s", stderr));
+            log.warn(String.format("stdout:%n%s", stdout));
+            log.warn(String.format("stderr:%n%s", stderr));
         }
 
         JSONObject obj = new JSONObject();
@@ -210,7 +227,6 @@ public class CmdExecutor {
 
     private static String createOutputMessage(String stdout, String stderr) {
         String message = "";
-
         if (StringUtils.isNotBlank(stdout)) {
             message += String.format("Output: %s", stdout);
 
@@ -223,10 +239,10 @@ public class CmdExecutor {
     }
 
     private static String streamToString(InputStream stream) throws Exception {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream, Charset.defaultCharset()));
         StringBuilder builder = new StringBuilder();
         String line = null;
-        while ( (line = reader.readLine()) != null) {
+        while ((line = reader.readLine()) != null) {
             builder.append(line);
             builder.append(System.getProperty("line.separator"));
         }

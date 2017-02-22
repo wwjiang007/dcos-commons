@@ -45,10 +45,10 @@
             "type":"string",
             "default":"serial"
           },
-          "config_update":{
+          "config_upgrade":{
             "description":"Uses a custom Kafka Upgrade validation. Only required if upgrading from an old version, i.e.  dcos-kafka-service version 1.1.18",
             "type":"boolean",
-            "default": true
+            "default": false
           }
         },
         "required":[

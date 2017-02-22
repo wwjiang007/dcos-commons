@@ -13,6 +13,11 @@ import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Topic Controller executing commands through command executor.
+ * Kafka package should also be deployed with framework to enable those kafka commands.
+ */
+
 @Path("/v1/topics")
 public class TopicController {
     private static final Log log = LogFactory.getLog(TopicController.class);
@@ -63,7 +68,7 @@ public class TopicController {
         }
     }
 
-    /* TODO:Below is copied from dcos-kafka-service */
+    /* Below is copied from dcos-kafka-service */
 
     @GET
     @Path("/unavailable_partitions")
@@ -105,7 +110,8 @@ public class TopicController {
 
             if (operation == null) {
                 result = new JSONObject();
-                result.put("Error", "Must designate an 'operation'.  Possibles operations are [producer-test, delete, partitions, config, deleteConfig].");
+                result.put("Error", "Must designate an 'operation'.  " +
+                        "Possibles operations are [producer-test, delete, partitions, config, deleteConfig].");
             } else {
                 switch (operation) {
                     case "producer-test":

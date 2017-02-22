@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response;
 import java.util.Optional;
 
 /**
- *  Broker Controller
+ *  Broker Controller.
  */
 @Path("/v1/brokers")
 @Produces("application/json")
@@ -27,7 +27,7 @@ public class BrokerController {
 
     @GET
     public Response listBrokers() {
-        try{
+        try {
             return Response.ok(kafkaZkClient.listBrokers(), MediaType.APPLICATION_JSON).build();
         } catch (Exception ex) {
             log.error("Failed to fetch broker ids", ex);

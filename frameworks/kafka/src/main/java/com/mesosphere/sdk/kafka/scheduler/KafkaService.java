@@ -1,16 +1,12 @@
 package com.mesosphere.sdk.kafka.scheduler;
 
-import com.mesosphere.sdk.config.ConfigStore;
 import com.mesosphere.sdk.kafka.api.BrokerController;
 import com.mesosphere.sdk.kafka.api.KafkaZKClient;
 import com.mesosphere.sdk.kafka.api.TopicController;
 import com.mesosphere.sdk.kafka.cmd.CmdExecutor;
 import com.mesosphere.sdk.scheduler.DefaultScheduler;
 import com.mesosphere.sdk.specification.DefaultService;
-import com.mesosphere.sdk.specification.DefaultServiceSpec;
 import com.mesosphere.sdk.specification.ServiceSpec;
-import com.mesosphere.sdk.state.StateStore;
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

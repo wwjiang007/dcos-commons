@@ -45,9 +45,9 @@
     "BROKER_JAVA_HEAP": "{{brokers.heap}}",
     "BROKER_PORT": "{{brokers.port}}",
 
-    {{#config_update}}
-    "CONFIG_UPDATE": "set"
-    {{/config_update}}
+    {{#config_upgrade}}
+    "CONFIG_UPGRADE": "set"
+    {{/config_upgrade}}
 
     {{#service.secret_name}}
     "DCOS_SERVICE_ACCOUNT_CREDENTIAL": { "secret": "serviceCredential" },
