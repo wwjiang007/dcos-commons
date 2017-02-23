@@ -1,0 +1,33 @@
+name: {{FRAMEWORK_NAME}}
+scheduler:
+  principal: {{FRAMEWORK_PRINCIPAL}}
+  user: {{FRAMEWORK_USER}}
+pods:
+  redis:
+    count: {{REDIS_COUNT}}
+    container:
+      image-name: nickbp/redis-test
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: >
+          mv /var/opt/redislabs/log/ $MESOS_SANDBOX/redis-log/
+          && rm -rf $MESOS_SANDBOX/redis-volume/log
+          && ln -s $MESOS_SANDBOX/redis-log/ $MESOS_SANDBOX/redis-volume/log
+          && sed -i "s,/var/opt/redislabs,$MESOS_SANDBOX/redis-volume,g" /opt/redislabs/
+          && ls -l /var/opt/*
+          && rm -rf /var/opt/redislabs
+          && ln -s $MESOS_SANDBOX/redis-volume /var/opt/redislabs
+          && ls -l /var/opt/*
+          && ps aux
+          && env
+          && echo START
+          && /opt/start.sh
+        cpus: {{REDIS_CPUS}}
+        memory: {{REDIS_MEM}}
+        volume:
+          path: "redis-volume"
+          type: ROOT
+          size: {{REDIS_DISK}}
+        env:
+          SLEEP_DURATION: {{SLEEP_DURATION}}
