@@ -7,6 +7,15 @@ pods:
     count: {{REDIS_COUNT}}
     container:
       image-name: nickbp/redis-test
+      rlimits:
+        # pending signals (-i) 483022 = RLIMIT_SIGPENDING?
+        # max user processes (-u) 483022 = RLIMIT_NPROC?
+        RLIMIT_SIGPENDING:
+          soft: 483022
+          hard: 483022
+        RLIMIT_NPROC:
+          soft: 483022
+          hard: 483022
     tasks:
       server:
         goal: RUNNING
