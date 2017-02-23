@@ -216,9 +216,23 @@ public class DefaultResourceSet implements ResourceSet {
                 RawPort rawPort = portEntry.getValue();
                 Protos.Value.Builder portValueBuilder = Protos.Value.newBuilder()
                         .setType(Protos.Value.Type.RANGES);
-                portValueBuilder.getRangesBuilder().addRangeBuilder()
-                        .setBegin(rawPort.getPort())
-                        .setEnd(rawPort.getPort());
+                if (rawPort.getPort() != null) {
+                    portValueBuilder.getRangesBuilder().addRangeBuilder()
+                            .setBegin(rawPort.getPort())
+                            .setEnd(rawPort.getPort());
+                } else if (rawPort.getMin() != null && rawPort.getMax() != null) {
+                    if (rawPort.getMin() >= rawPort.getMax()) {
+                        throw new IllegalStateException(String.format(
+                                "Port '%s' min=%d must be smaller than max=%d",
+                                name, rawPort.getMin(), rawPort.getMax()));
+                    }
+                    portValueBuilder.getRangesBuilder().addRangeBuilder()
+                            .setBegin(rawPort.getMin())
+                            .setEnd(rawPort.getMax());
+                } else {
+                    throw new IllegalStateException(String.format(
+                            "Port '%s' must either specify 'port' or both 'min' and 'max'", name));
+                }
                 portsValueBuilder.mergeRanges(portValueBuilder.getRanges());
                 if (envKey == null) {
                     envKey = rawPort.getEnvKey();
