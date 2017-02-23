@@ -7,9 +7,9 @@ pods:
     count: {{REDIS_COUNT}}
     container:
       image-name: nickbp/redis-test
+      networks:
+        dcos: {}
       rlimits:
-        # pending signals (-i) 483022 = RLIMIT_SIGPENDING?
-        # max user processes (-u) 483022 = RLIMIT_NPROC?
         RLIMIT_SIGPENDING:
           soft: 483022
           hard: 483022
@@ -20,20 +20,18 @@ pods:
       server:
         goal: RUNNING
         cmd: >
-          mv /var/opt/redislabs/log/ $MESOS_SANDBOX/redis-log/
-          && rm -rf $MESOS_SANDBOX/redis-volume/log
-          && ln -s $MESOS_SANDBOX/redis-log/ $MESOS_SANDBOX/redis-volume/log
-          && sed -i "s,/var/opt/redislabs,$MESOS_SANDBOX/redis-volume,g" /opt/redislabs/
-          && ls -l /var/opt/*
-          && rm -rf /var/opt/redislabs
-          && ln -s $MESOS_SANDBOX/redis-volume /var/opt/redislabs
-          && ls -l /var/opt/*
-          && ps aux
+          ps aux
           && env
           && echo START
           && /opt/start.sh
         cpus: {{REDIS_CPUS}}
         memory: {{REDIS_MEM}}
+        ports:
+          pdns:
+            port: 53
+          bigrange:
+            min: 10000
+            max: 10100
         volume:
           path: "redis-volume"
           type: ROOT
