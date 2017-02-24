@@ -21,8 +21,8 @@ pods:
       server:
         goal: RUNNING
         cmd: >
-          ./bootstrap
-          && echo IP $(sh get-ip.sh)
+          ${MESOS_SANDBOX}/bootstrap
+          && echo IP $(sh ${MESOS_SANDBOX}/get-ip.sh)
           && echo SUPERVISORD CONFIG
           && sed -i 's,command=.*/pdns_server,command=sleep infinity,g' /opt/redislabs/config/supervisord.conf
           && cat /opt/redislabs/config/supervisord.conf
@@ -35,17 +35,17 @@ pods:
           internal1:
             port-min: 3333
             port-max: 3337
-          internal2:
-            port-min: 36379
-            port-max: 36380
+          #internal2: (TODO these ports are not offered by mesos - set to other value in redis?)
+          #  port-min: 36379
+          #  port-max: 36380
           #dns1:
           #  port: 53
           dns2:
             port: 5353
           web-ssl:
             port: 8443
-          rest:
-            port: 8080
+          #rest: (TODO this port is not offered by mesos - set to other value in redis?)
+          #  port: 8080
           rest-ssl:
             port: 9443
           db-external:
