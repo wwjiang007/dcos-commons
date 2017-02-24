@@ -59,7 +59,7 @@ dcos task exec <task name, eg redis-0-server> <command>
 1. Create this `repoxy` task via `/marathon` (will change once proxylite has https support):
 ```
 {
-  "id": "/repoxy",
+  "id": "/repoxy-all",
   "cpus": 1,
   "acceptedResourceRoles": [
       "slave_public"
@@ -87,16 +87,31 @@ dcos task exec <task name, eg redis-0-server> <command>
     {
       "port": 0,
       "protocol": "tcp"
+    },
+    {
+      "port": 0,
+      "protocol": "tcp"
+    },
+    {
+      "port": 0,
+      "protocol": "tcp"
+    },
+    {
+      "port": 0,
+      "protocol": "tcp"
     }
   ],
   "cmd": "/proxyfiles/bin/start redis $PORT0",
   "env": {
-    "PROXY_ENDPOINT_0": "My Cool Dashboard,redis-0-server,mesos,8443,/ui,/"
+    "PROXY_ENDPOINT_0": "node0-9443,redis-0-server,mesos,9443,/node0-api,/",
+    "PROXY_ENDPOINT_1": "node0-8443,redis-0-server,mesos,8443,/node0,/",
+    "PROXY_ENDPOINT_2": "node1-8443,redis-1-server,mesos,8443,/node1,/",
+    "PROXY_ENDPOINT_3": "node2-8443,redis-2-server,mesos,8443,/node2,/"
   }
 }
 ```
-2. Once the `repoxy` task is running, look at its `stdout` (via sandbox on `/mesos` or task info on `/marathon`) to get the Redis dashboard URL
-3. Note that the persistent volume (survives container restarts) should be at `/mnt/mesos/sandbox/redis-volume`
+2. Once the `repoxy-all` task is running, look at its `stdout` (via sandbox on `/mesos` or task info on `/marathon`) to get the Redis dashboard URL
+3. When configuring redis, note that the persistent volume (survives container restarts) should be at `/mnt/mesos/sandbox/redis-volume`
 
 ## Useful files
 
