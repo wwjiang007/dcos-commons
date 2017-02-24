@@ -26,19 +26,11 @@ pods:
         cmd: >
           ps aux
           && env
-          && echo CONFIG START...
-          && umask 022
-          && /opt/redislabs/sbin/generate_cert.sh cm "Admin UI"
-          && /opt/redislabs/sbin/generate_cert.sh api "Cluster API"
-          && /opt/redislabs/sbin/generate_cert.sh proxy "redisdb"
-          && (cron &)
           && echo SUPERVISORD CONFIG
           && sed -i 's,command=.*/pdns_server,command=sleep infinity,g' /opt/redislabs/config/supervisord.conf
           && cat /opt/redislabs/config/supervisord.conf
-          && echo $(date) SUPERVISORD START
-          && exec sudo -u redislabs /opt/redislabs/bin/supervisord -c /opt/redislabs/config/supervisord.conf
-          && echo $(date) SUPERVISORD FINISHED
-          || (RESULT=$? && echo $(date) SUPERVISORD ERROR CODE=$RESULT && ps aux && exit $RESULT)
+          && echo START
+          && /opt/start.sh
         cpus: {{REDIS_CPUS}}
         memory: {{REDIS_MEM}}
         ports:
