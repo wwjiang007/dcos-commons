@@ -91,7 +91,7 @@
           "internal_max":{
             "description":"End of port range to use internally with shards",
             "type":"integer",
-            "default":20100
+            "default":20200
           }
         },
         "required":[

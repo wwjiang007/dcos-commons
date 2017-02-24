@@ -61,10 +61,10 @@ pods:
         configs:
           sample.conf:
             template: {{CONFIG_TEMPLATE_PATH}}/sample.conf.tmpl
-            dest: sample.conf
+            dest: /mnt/mesos/sandbox/sample.conf
           get-ip.sh:
             template: {{CONFIG_TEMPLATE_PATH}}/get-ip.sh.tmpl
-            dest: get-ip.sh
+            dest: /mnt/mesos/sandbox/get-ip.sh
         env:
           PORT_EXTERNAL_MIN: {{PORT_EXTERNAL_MIN}}
           PORT_EXTERNAL_MAX: {{PORT_EXTERNAL_MAX}}
