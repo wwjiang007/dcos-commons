@@ -15,8 +15,8 @@ public class RawPort {
 
     private RawPort(
             @JsonProperty("port") Integer port,
-            @JsonProperty("min") Integer min,
-            @JsonProperty("max") Integer max,
+            @JsonProperty("port-min") Integer min,
+            @JsonProperty("port-max") Integer max,
             @JsonProperty("env-key") String envKey,
             @JsonProperty("vip") RawVip vip) {
         this.port = port;

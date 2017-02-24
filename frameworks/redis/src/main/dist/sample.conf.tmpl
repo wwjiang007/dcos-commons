@@ -1,0 +1,26 @@
+# this is a sample config
+# it may take any format as long as it's text
+# it is populated with container env values automatically
+
+#
+# automatically provided to all containers:
+#
+
+# task/service identification:
+service.name={{FRAMEWORK_NAME}}
+task.name={{TASK_NAME}}
+task.index={{POD_INSTANCE_INDEX}}
+
+# dcos metrics endpoint (redis could emit statsd-formatted metrics here):
+metrics.statsd.host={{STATSD_UDP_HOST}}
+metrics.statsd.port={{STATSD_UDP_PORT}}
+
+#
+# provided by svc.yml's 'env' configuration, exposed to end-users:
+#
+
+# port ranges to use for databases:
+port.ext.min={{PORT_EXTERNAL_MIN}}
+port.ext.max={{PORT_EXTERNAL_MAX}}
+port.int.min={{PORT_INTERNAL_MIN}}
+port.int.max={{PORT_INTERNAL_MAX}}

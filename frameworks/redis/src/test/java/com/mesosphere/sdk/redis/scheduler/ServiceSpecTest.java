@@ -18,7 +18,10 @@ public class ServiceSpecTest extends BaseServiceSpecTest {
         ENV_VARS.set("REDIS_MEM", "512");
         ENV_VARS.set("REDIS_DISK", "5000");
 
-        ENV_VARS.set("SLEEP_DURATION", "1000");
+        ENV_VARS.set("PORT_EXTERNAL_MIN", "10000");
+        ENV_VARS.set("PORT_EXTERNAL_MAX", "10100");
+        ENV_VARS.set("PORT_INTERNAL_MIN", "20000");
+        ENV_VARS.set("PORT_INTERNAL_MAX", "20100");
     }
 
     @Test

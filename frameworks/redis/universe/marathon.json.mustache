@@ -22,11 +22,17 @@
     "FRAMEWORK_NAME": "{{service.name}}",
     "FRAMEWORK_PRINCIPAL": "{{service.principal}}",
     "FRAMEWORK_USER": "{{service.user}}",
+
     "REDIS_COUNT": "{{redis.count}}",
     "REDIS_CPUS": "{{redis.cpus}}",
     "REDIS_MEM": "{{redis.mem}}",
     "REDIS_DISK": "{{redis.disk}}",
-    "SLEEP_DURATION": "{{service.sleep}}",
+
+    "PORT_EXTERNAL_MIN": "{{ports.external_min}}",
+    "PORT_EXTERNAL_MAX": "{{ports.external_max}}",
+    "PORT_INTERNAL_MIN": "{{ports.internal_min}}",
+    "PORT_INTERNAL_MAX": "{{ports.internal_max}}",
+
     "EXECUTOR_URI": "{{resource.assets.uris.executor-zip}}",
     "BOOTSTRAP_URI": "{{resource.assets.uris.bootstrap-zip}}",
     {{#service.secret_name}}
@@ -34,7 +40,8 @@
     "MESOS_MODULES": "{\"libraries\": [{\"file\": \"libdcos_security.so\", \"modules\": [{\"name\": \"com_mesosphere_dcos_ClassicRPCAuthenticatee\"}]}]}",
     "MESOS_AUTHENTICATEE": "com_mesosphere_dcos_ClassicRPCAuthenticatee",
     {{/service.secret_name}}
-    "LIBMESOS_URI": "{{resource.assets.uris.libmesos-bundle-tar-gz}}"
+    "LIBMESOS_URI": "{{resource.assets.uris.libmesos-bundle-tar-gz}}",
+    "CONFIG_TEMPLATE_PATH": "redis-scheduler"
   },
   "uris": [
     "{{resource.assets.uris.jre-tar-gz}}",

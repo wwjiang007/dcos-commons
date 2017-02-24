@@ -15,17 +15,14 @@ pods:
         RLIMIT_NPROC:
           soft: 483022
           hard: 483022
+    uris:
+      - {{BOOTSTRAP_URI}}
     tasks:
       server:
         goal: RUNNING
-        #&& echo PDNS CONFIG
-        #&& mkdir -p /opt/etc/redislabs/pdns.conf.d/
-        #&& echo "local-address=$(echo $MESOS_AGENT_ENDPOINT | cut -d : -f 1)" > /opt/etc/redislabs/pdns.conf.d/fixed-ip.conf
-        #&& ls -l /opt/etc/redislabs/pdns.conf.d/
-        #&& cat /opt/etc/redislabs/pdns.conf.d/*
         cmd: >
-          ps aux
-          && env
+          ./bootstrap
+          && echo IP $(sh get-ip.sh)
           && echo SUPERVISORD CONFIG
           && sed -i 's,command=.*/pdns_server,command=sleep infinity,g' /opt/redislabs/config/supervisord.conf
           && cat /opt/redislabs/config/supervisord.conf
@@ -34,17 +31,45 @@ pods:
         cpus: {{REDIS_CPUS}}
         memory: {{REDIS_MEM}}
         ports:
-          web:
+          # doc: https://redislabs.com/redis-enterprise-documentation/cluster-administration/best-practices/machine-ports-configuration/
+          internal1:
+            port-min: 3333
+            port-max: 3337
+          internal2:
+            port-min: 36379
+            port-max: 36380
+          #dns1:
+          #  port: 53
+          dns2:
+            port: 5353
+          web-ssl:
             port: 8443
-          bigrange:
-            min: 10000
-            max: 10100
+          rest:
+            port: 8080
+          rest-ssl:
+            port: 9443
+          db-external:
+            port-min: {{PORT_EXTERNAL_MIN}}
+            port-max: {{PORT_EXTERNAL_MAX}}
+          db-internal:
+            port-min: {{PORT_INTERNAL_MIN}}
+            port-max: {{PORT_INTERNAL_MAX}}
         volume:
           path: "redis-volume"
           type: ROOT
           size: {{REDIS_DISK}}
+        configs:
+          sample.conf:
+            template: {{CONFIG_TEMPLATE_PATH}}/sample.conf.tmpl
+            dest: sample.conf
+          get-ip.sh:
+            template: {{CONFIG_TEMPLATE_PATH}}/get-ip.sh.tmpl
+            dest: get-ip.sh
         env:
-          SLEEP_DURATION: {{SLEEP_DURATION}}
+          PORT_EXTERNAL_MIN: {{PORT_EXTERNAL_MIN}}
+          PORT_EXTERNAL_MAX: {{PORT_EXTERNAL_MAX}}
+          PORT_INTERNAL_MIN: {{PORT_INTERNAL_MIN}}
+          PORT_INTERNAL_MAX: {{PORT_INTERNAL_MAX}}
   proxylite:
     container:
       image-name: mesosphere/proxylite:1.0.1

@@ -10,11 +10,6 @@
             "type":"string",
             "default":"redis"
           },
-          "sleep" : {
-            "description":"The sleep duration in seconds before tasks exit.",
-            "type":"number",
-            "default":1000
-          },
           "spec_file" : {
             "description":"The name of the service spec yaml file.",
             "type":"string",
@@ -43,28 +38,28 @@
         }
       },
       "redis":{
-        "description":"Redis pod configuration properties",
+        "description":"Redis configuration properties",
         "type":"object",
         "properties":{
           "cpus":{
-            "description":"Redis pod CPU requirements",
+            "description":"Redis CPU requirements",
             "type":"number",
             "default":3.5
           },
           "mem":{
-            "description":"Redis pod mem requirements (in MB)",
+            "description":"Redis mem requirements (in MB)",
             "type":"integer",
             "default":8192
           },
           "disk":{
-            "description":"Redis pod persistent disk requirements (in MB)",
+            "description":"Redis persistent disk requirements (in MB)",
             "type":"integer",
             "default":32768
           },
           "count":{
-            "description":"Number of Redis pods to run",
+            "description":"Number of Redis to run",
             "type":"integer",
-            "default":1
+            "default":3
           }
         },
         "required":[
@@ -72,6 +67,38 @@
           "mem",
           "disk",
           "count"
+        ]
+      },
+      "ports":{
+        "description":"Database port configuration",
+        "type":"object",
+        "properties":{
+          "external_min":{
+            "description":"Start of port range to expose to clients",
+            "type":"integer",
+            "default":10000
+          },
+          "external_max":{
+            "description":"End of port range to expose to clients",
+            "type":"integer",
+            "default":10100
+          },
+          "internal_min":{
+            "description":"Start of port range to use internally with shards",
+            "type":"integer",
+            "default":20000
+          },
+          "internal_max":{
+            "description":"End of port range to use internally with shards",
+            "type":"integer",
+            "default":20100
+          }
+        },
+        "required":[
+          "external_min",
+          "external_max",
+          "internal_min",
+          "internal_max"
         ]
       }
     }
