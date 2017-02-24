@@ -1,4 +1,5 @@
 name: {{FRAMEWORK_NAME}}
+web-url: http://proxylite-0-server.{{FRAMEWORK_NAME}}.mesos:4040
 scheduler:
   principal: {{FRAMEWORK_PRINCIPAL}}
   user: {{FRAMEWORK_USER}}
@@ -7,8 +8,6 @@ pods:
     count: {{REDIS_COUNT}}
     container:
       image-name: nickbp/redis-test
-      networks:
-        dcos: {}
       rlimits:
         RLIMIT_SIGPENDING:
           soft: 483022
@@ -19,16 +18,32 @@ pods:
     tasks:
       server:
         goal: RUNNING
+        #&& echo PDNS CONFIG
+        #&& mkdir -p /opt/etc/redislabs/pdns.conf.d/
+        #&& echo "local-address=$(echo $MESOS_AGENT_ENDPOINT | cut -d : -f 1)" > /opt/etc/redislabs/pdns.conf.d/fixed-ip.conf
+        #&& ls -l /opt/etc/redislabs/pdns.conf.d/
+        #&& cat /opt/etc/redislabs/pdns.conf.d/*
         cmd: >
           ps aux
           && env
-          && echo START
-          && /opt/start.sh
+          && echo CONFIG START...
+          && umask 022
+          && /opt/redislabs/sbin/generate_cert.sh cm "Admin UI"
+          && /opt/redislabs/sbin/generate_cert.sh api "Cluster API"
+          && /opt/redislabs/sbin/generate_cert.sh proxy "redisdb"
+          && (cron &)
+          && echo SUPERVISORD CONFIG
+          && sed -i 's,command=.*/pdns_server,command=sleep infinity,g' /opt/redislabs/config/supervisord.conf
+          && cat /opt/redislabs/config/supervisord.conf
+          && echo $(date) SUPERVISORD START
+          && exec sudo -u redislabs /opt/redislabs/bin/supervisord -c /opt/redislabs/config/supervisord.conf
+          && echo $(date) SUPERVISORD FINISHED
+          || (RESULT=$? && echo $(date) SUPERVISORD ERROR CODE=$RESULT && ps aux && exit $RESULT)
         cpus: {{REDIS_CPUS}}
         memory: {{REDIS_MEM}}
         ports:
-          pdns:
-            port: 53
+          web:
+            port: 8443
           bigrange:
             min: 10000
             max: 10100
@@ -38,3 +53,23 @@ pods:
           size: {{REDIS_DISK}}
         env:
           SLEEP_DURATION: {{SLEEP_DURATION}}
+  proxylite:
+    container:
+      image-name: mesosphere/proxylite:1.0.1
+    count: 1
+    uris:
+      - {{BOOTSTRAP_URI}}
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: "./bootstrap -resolve-hosts=redis-0-server.{{FRAMEWORK_NAME}}.mesos && /proxylite/run.sh"
+        cpus: 0.1
+        memory: 100
+        ports:
+          proxylite:
+            env-key: PORT_PROXYLITE
+            port: 4040
+        env:
+          ROOT_REDIRECT: "/ui"
+          EXTERNAL_ROUTES: "/v1,/ui"
+          INTERNAL_ROUTES: "{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,redis-0-server.{{FRAMEWORK_NAME}}.mesos:8443"
