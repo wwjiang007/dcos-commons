@@ -38,7 +38,7 @@
           "placement_constraint": {
             "description":"Marathon-style placement constraint for Redis nodes. Example: rack_id:LIKE:rack-foo-.*,rack_id:MAX_PER:2",
             "type":"string",
-            "default":"hostname:MAX_PER:1"
+            "default":""
           }
         }
       },
