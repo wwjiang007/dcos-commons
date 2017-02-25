@@ -6,6 +6,7 @@ scheduler:
 pods:
   redis:
     count: {{REDIS_COUNT}}
+    placement: {{PLACEMENT_CONSTRAINTS}}
     container:
       image-name: nickbp/redis-test
       rlimits:
