@@ -16,6 +16,9 @@ pods:
         RLIMIT_NPROC:
           soft: 483022
           hard: 483022
+        RLIMIT_NOFILE:
+          soft: 100000
+          hard: 100000
     uris:
       - {{BOOTSTRAP_URI}}
     tasks:
