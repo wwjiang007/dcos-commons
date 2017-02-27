@@ -76,7 +76,7 @@ pods:
           PORT_INTERNAL_MAX: {{PORT_INTERNAL_MAX}}
   proxylite:
     container:
-      image-name: mesosphere/proxylite:1.0.1
+      image-name: mesosphere/proxylite:2.0.0
     count: 1
     uris:
       - {{BOOTSTRAP_URI}}
@@ -93,4 +93,4 @@ pods:
         env:
           ROOT_REDIRECT: "/ui"
           EXTERNAL_ROUTES: "/v1,/ui"
-          INTERNAL_ROUTES: "{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,redis-0-server.{{FRAMEWORK_NAME}}.mesos:8443"
+          INTERNAL_ROUTES: "http://{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,https://redis-0-server.{{FRAMEWORK_NAME}}.mesos:8443"
