@@ -92,7 +92,7 @@ pods:
     tasks:
       server:
         goal: RUNNING
-        cmd: "./bootstrap -resolve-hosts=redis-0-server.{{FRAMEWORK_NAME}}.mesos && /proxylite/run.sh"
+        cmd: "./bootstrap -resolve-hosts=redis-0-server.{{FRAMEWORK_NAME}}.mesos,redis-1-server.{{FRAMEWORK_NAME}}.mesos,redis-2-server.{{FRAMEWORK_NAME}}.mesos && /proxylite/run.sh"
         cpus: 0.1
         memory: 100
         ports:
@@ -101,5 +101,5 @@ pods:
             port: 4040
         env:
           ROOT_REDIRECT: "/ui0/"
-          EXTERNAL_ROUTES: "/v1,/ui0,/ui1,/ui2"
-          INTERNAL_ROUTES: "http://{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,https://redis-0-server.{{FRAMEWORK_NAME}}.mesos:8443,https://redis-1-server.{{FRAMEWORK_NAME}}.mesos:8443,https://redis-2-server.{{FRAMEWORK_NAME}}.mesos:8443"
+          EXTERNAL_ROUTES: "/v1,/ui0,/api0,/ui1,/api1,/ui2,/api2"
+          INTERNAL_ROUTES: "http://{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,https://redis-0-server.{{FRAMEWORK_NAME}}.mesos:8443,https://redis-0-server.{{FRAMEWORK_NAME}}.mesos:9443,https://redis-1-server.{{FRAMEWORK_NAME}}.mesos:8443,https://redis-1-server.{{FRAMEWORK_NAME}}.mesos:9443,https://redis-2-server.{{FRAMEWORK_NAME}}.mesos:8443,https://redis-2-server.{{FRAMEWORK_NAME}}.mesos:9443"
