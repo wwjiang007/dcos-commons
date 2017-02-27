@@ -5,6 +5,7 @@ scheduler:
   user: {{FRAMEWORK_USER}}
 pods:
   redis:
+    user: root # to bind to port 53 (possibly other things?) -- note: doesn't seem to help with binding to 53
     count: {{REDIS_COUNT}}
     placement: {{PLACEMENT_CONSTRAINTS}}
     container:
@@ -24,12 +25,20 @@ pods:
     tasks:
       server:
         goal: RUNNING
+        #&& echo SUPERVISORD CONFIG
+        #&& sed -i 's,command=.*/pdns_server,command=sleep infinity,g' /opt/redislabs/config/supervisord.conf
+        #&& cat /opt/redislabs/config/supervisord.conf
         cmd: >
           ${MESOS_SANDBOX}/bootstrap
-          && echo IP $(sh ${MESOS_SANDBOX}/get-ip.sh)
-          && echo SUPERVISORD CONFIG
-          && sed -i 's,command=.*/pdns_server,command=sleep infinity,g' /opt/redislabs/config/supervisord.conf
-          && cat /opt/redislabs/config/supervisord.conf
+          && echo USER $(whoami)
+          && MESOS_IP=$(sh ${MESOS_SANDBOX}/get-ip.sh)
+          && echo IP $MESOS_IP
+          && echo PDNS CONFIG
+          && mkdir -p /etc/opt/redislabs/pdns.conf.d/
+          && echo "local-address=${MESOS_IP}" > /etc/opt/redislabs/pdns.conf.d/fixed-ip.conf
+          && echo "local-port=5354" >> /etc/opt/redislabs/pdns.conf.d/fixed-ip.conf
+          && ls -l /etc/opt/redislabs/pdns.conf.d/
+          && cat /etc/opt/redislabs/pdns.conf.d/*
           && echo START
           && /opt/start.sh
         cpus: {{REDIS_CPUS}}
@@ -42,8 +51,8 @@ pods:
           #internal2: (TODO these ports are not offered by mesos - set to other value in redis?)
           #  port-min: 36379
           #  port-max: 36380
-          #dns1:
-          #  port: 53
+          dns1:
+            port: 5354 # TODO this would normally be port 53, which isn't offered by mesos anyway. see pdns config in command
           dns2:
             port: 5353
           web-ssl:
@@ -91,6 +100,6 @@ pods:
             env-key: PORT_PROXYLITE
             port: 4040
         env:
-          ROOT_REDIRECT: "/ui"
-          EXTERNAL_ROUTES: "/v1,/ui"
-          INTERNAL_ROUTES: "http://{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,https://redis-0-server.{{FRAMEWORK_NAME}}.mesos:8443"
+          ROOT_REDIRECT: "/ui0/"
+          EXTERNAL_ROUTES: "/v1,/ui0,/ui1,/ui2"
+          INTERNAL_ROUTES: "http://{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,https://redis-0-server.{{FRAMEWORK_NAME}}.mesos:8443,https://redis-1-server.{{FRAMEWORK_NAME}}.mesos:8443,https://redis-2-server.{{FRAMEWORK_NAME}}.mesos:8443"
