@@ -9,7 +9,7 @@ pods:
     count: {{REDIS_COUNT}}
     placement: {{PLACEMENT_CONSTRAINTS}}
     container:
-      image-name: nickbp/redis-test
+      image-name: nickbp/redis-test:1
       rlimits:
         RLIMIT_SIGPENDING:
           soft: 483022
@@ -20,6 +20,9 @@ pods:
         RLIMIT_NOFILE:
           soft: 100000
           hard: 100000
+        RLIMIT_CORE:
+          soft:
+          hard:
     uris:
       - {{BOOTSTRAP_URI}}
     tasks:
@@ -30,6 +33,9 @@ pods:
         #&& cat /opt/redislabs/config/supervisord.conf
         cmd: >
           ${MESOS_SANDBOX}/bootstrap
+          && rsyslogd -i ${MESOS_SANDBOX}/rsyslogd.pid
+          && ls -l /dev/
+          && ps aux
           && echo USER $(whoami)
           && MESOS_IP=$(sh ${MESOS_SANDBOX}/get-ip.sh)
           && echo IP $MESOS_IP
