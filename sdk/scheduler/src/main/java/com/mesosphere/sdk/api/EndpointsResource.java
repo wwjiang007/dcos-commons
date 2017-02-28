@@ -13,7 +13,7 @@ import com.mesosphere.sdk.api.types.EndpointProducer;
 import com.mesosphere.sdk.offer.CommonTaskUtils;
 import com.mesosphere.sdk.offer.ResourceUtils;
 import com.mesosphere.sdk.offer.TaskException;
-import com.mesosphere.sdk.specification.DefaultResourceSet;
+import com.mesosphere.sdk.specification.yaml.YAMLToInternalMappers;
 import com.mesosphere.sdk.state.StateStore;
 
 import org.apache.mesos.Protos.DiscoveryInfo;
@@ -179,10 +179,10 @@ public class EndpointsResource {
             for (Port port : discoveryInfo.getPorts().getPortsList()) {
                 // host:port to include in 'direct' array(s):
                 final String directHostPort = String.format("%s:%d", directHost, port.getNumber());
-                if (port.getVisibility() != DefaultResourceSet.PUBLIC_VIP_VISIBILITY) {
+                if (port.getVisibility() != YAMLToInternalMappers.PUBLIC_VIP_VISIBILITY) {
                     LOGGER.info(
                             "Task discovery information has {} visibility, {} needed to be included in endpoints: {}",
-                            port.getVisibility(), DefaultResourceSet.PUBLIC_VIP_VISIBILITY, taskInfo.getName());
+                            port.getVisibility(), YAMLToInternalMappers.PUBLIC_VIP_VISIBILITY, taskInfo.getName());
                     continue;
                 }
                 addPortToEndpoints(

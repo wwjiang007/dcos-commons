@@ -5,7 +5,6 @@ scheduler:
   user: {{FRAMEWORK_USER}}
 pods:
   redis:
-    user: root # TODO originally added for binding to port 53, but it didn't help
     count: {{REDIS_COUNT}}
     placement: {{PLACEMENT_CONSTRAINTS}}
     container:
@@ -20,7 +19,7 @@ pods:
         RLIMIT_NOFILE:
           soft: 100000
           hard: 100000
-        RLIMIT_CORE:
+        RLIMIT_CORE: # unlimited
           soft:
           hard:
     uris:
@@ -28,26 +27,41 @@ pods:
     tasks:
       server:
         goal: RUNNING
-        #&& echo SUPERVISORD CONFIG
-        #&& sed -i 's,command=.*/pdns_server,command=sleep infinity,g' /opt/redislabs/config/supervisord.conf
-        #&& cat /opt/redislabs/config/supervisord.conf
+        # note: for debug step, we just do some parts manually, since '/opt/redislabs/bin/debug_mode on' is broken:
         cmd: >
           ${MESOS_SANDBOX}/bootstrap
+          && echo USER $(whoami)
+          {{#REDIS_DEBUG}}
+          && echo ENABLING REDIS DEBUG
+          && for PROCESS in cluster_wd node_wd cnm_exec cnm_http cnm_https cm_server redis_mgr resource_mgr alert_mgr; do
+            echo - $PROCESS;
+            echo "{ \"loggers\": { \"${PROCESS}\": { \"level\": \"DEBUG\" } } }" > ${PROCESS}_debug.conf;
+          done
+          {{/REDIS_DEBUG}}
+          && echo PDNS CONFIG
+          && mkdir -p /etc/opt/redislabs/pdns.conf.d/
+          && echo "local-address=$(sh ${MESOS_SANDBOX}/get-ip.sh)" > /etc/opt/redislabs/pdns.conf.d/fixed-ip.conf
+          && echo "local-port=5354" >> /etc/opt/redislabs/pdns.conf.d/fixed-ip.conf
+          && ls -l /etc/opt/redislabs/pdns.conf.d/
+          && cat /etc/opt/redislabs/pdns.conf.d/*
+          && echo START RSYSLOGD
           && rm /var/run/rsyslogd.pid
           && rsyslogd
           && ls -l /dev/
           && ps aux
-          && echo USER $(whoami)
-          && MESOS_IP=$(sh ${MESOS_SANDBOX}/get-ip.sh)
-          && echo IP $MESOS_IP
-          && echo PDNS CONFIG
-          && mkdir -p /etc/opt/redislabs/pdns.conf.d/
-          && echo "local-address=${MESOS_IP}" > /etc/opt/redislabs/pdns.conf.d/fixed-ip.conf
-          && echo "local-port=5354" >> /etc/opt/redislabs/pdns.conf.d/fixed-ip.conf
-          && ls -l /etc/opt/redislabs/pdns.conf.d/
-          && cat /etc/opt/redislabs/pdns.conf.d/*
-          && echo START
+          && echo START REDIS
           && /opt/start.sh
+        readiness-check:
+          # TODO replace with a more valid check that supervisord is happy
+          # $ sudo -u redislabs /opt/redislabs/bin/supervisorctl status
+          # unix:///tmp/rlec_supervisord.sock refused connection
+          cmd: >-
+            INSTANCES=$(ps aux | grep bin/dmcproxy | grep -v grep)
+            && echo INSTANCES $INSTANCES
+            || [ -n "$INSTANCES" ]
+          interval: 10
+          delay: 15
+          timeout: 60
         cpus: {{REDIS_CPUS}}
         memory: {{REDIS_MEM}}
         ports:
@@ -90,23 +104,59 @@ pods:
           PORT_EXTERNAL_MAX: {{PORT_EXTERNAL_MAX}}
           PORT_INTERNAL_MIN: {{PORT_INTERNAL_MIN}}
           PORT_INTERNAL_MAX: {{PORT_INTERNAL_MAX}}
+      config-init:
+        goal: FINISHED
+        cpus: 0.1
+        memory: 32
+        #TODO: provide "rack_id <id>" once dcos-commons supports exposing mesos agent attributes via env
+        cmd: >
+          LICENSE_FILE=$(mktemp)
+          && echo "{{REDIS_LICENSE}}" > $LICENSE_FILE
+          && echo TODO RUN /opt/redislabs/bin/rladmin cluster create name {{REDIS_CLUSTER_FQDN}} user {{REDIS_ADMIN_USER}} password {{REDIS_ADMIN_PASSWORD}} license_file $LICENSE_FILE
+          && rm -f $LICENSE_FILE
+      config-join:
+        goal: FINISHED
+        cpus: 0.1
+        memory: 32
+        #TODO: provide "rack_id <id>" once dcos-commons supports exposing mesos agent attributes via env
+        #TODO: provide "replace_node <uid>" when replacing a prior node
+        cmd: >
+          ${MESOS_SANDBOX}/bootstrap -resolve-hosts redis-0-server.{{FRAMEWORK_NAME}}.mesos
+          && TASK_ZERO_IP=$(python3 -c "import socket; print(socket.gethostbyname('redis-0-server.{{FRAMEWORK_NAME}}.mesos'))")
+          && echo TODO RUN /opt/redislabs/bin/rladmin cluster join nodes $TASK_ZERO_IP username {{REDIS_ADMIN_USER}} password {{REDIS_ADMIN_PASSWORD}}
   proxylite:
+    count: 1
     container:
       image-name: mesosphere/proxylite:2.0.0
-    count: 1
     uris:
       - {{BOOTSTRAP_URI}}
     tasks:
       server:
         goal: RUNNING
-        cmd: "./bootstrap -resolve-hosts=redis-0-server.{{FRAMEWORK_NAME}}.mesos,redis-1-server.{{FRAMEWORK_NAME}}.mesos,redis-2-server.{{FRAMEWORK_NAME}}.mesos && /proxylite/run.sh"
+        # Values for 'cmd' and 'env' are automatically filled in by Main.java.
+        # We do this because the proxylite args/env both depend on the number of launched Redis nodes.
+        cmd: echo If youre seeing this message, Main.java didnt update this task && exit 1
         cpus: 0.1
         memory: 100
         ports:
           proxylite:
             env-key: PORT_PROXYLITE
             port: 4040
-        env:
-          ROOT_REDIRECT: "/ui0/"
-          EXTERNAL_ROUTES: "/v1,/ui0,/api0,/ui1,/api1,/ui2,/api2"
-          INTERNAL_ROUTES: "http://{{FRAMEWORK_NAME}}.marathon.mesos:{{PORT0}}/v1,https://redis-0-server.{{FRAMEWORK_NAME}}.mesos:8443,https://redis-0-server.{{FRAMEWORK_NAME}}.mesos:9443,https://redis-1-server.{{FRAMEWORK_NAME}}.mesos:8443,https://redis-1-server.{{FRAMEWORK_NAME}}.mesos:9443,https://redis-2-server.{{FRAMEWORK_NAME}}.mesos:8443,https://redis-2-server.{{FRAMEWORK_NAME}}.mesos:9443"
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      redis-deploy:
+        strategy: parallel
+        pod: redis
+        steps:
+          - default: [[server]]
+      proxylite-deploy:
+        strategy: serial
+        pod: proxylite
+      redis-init:
+        strategy: serial
+        pod: redis
+        steps:
+          - 0: [[config-init]]
+          - default: [[config-join]]

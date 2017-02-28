@@ -46,6 +46,48 @@
         "description":"Redis configuration properties",
         "type":"object",
         "properties":{
+          "count":{
+            "description":"Number of Redis nodes to run",
+            "type":"integer",
+            "default":3
+          },
+          "license_key":{
+            "description":"Redis Pack License Key",
+            "type":"string",
+            "default":"a-valid-key"
+          },
+          "admin_username":{
+            "description":"Redis Administrator username",
+            "type":"string",
+            "default":"insecure"
+          },
+          "admin_password":{
+            "description":"Redis Administrator password",
+            "type":"string",
+            "default":"insecure"
+          },
+          "custom_fqdn":{
+            "description":"Custom Redis name/FQDN (default: '<service-name>.redis')",
+            "type":"string",
+            "default":""
+          },
+          "debug":{
+            "description":"Enables debug logging in redis when non-empty",
+            "type":"string",
+            "default":"y"
+          }
+        },
+        "required":[
+          "count",
+          "license_key",
+          "admin_username",
+          "admin_password"
+        ]
+      },
+      "resources":{
+        "description":"Redis resource configuration",
+        "type":"object",
+        "properties":{
           "cpus":{
             "description":"Redis CPU requirements",
             "type":"number",
@@ -61,49 +103,35 @@
             "type":"integer",
             "default":32768
           },
-          "count":{
-            "description":"Number of Redis to run",
-            "type":"integer",
-            "default":3
-          }
-        },
-        "required":[
-          "cpus",
-          "mem",
-          "disk",
-          "count"
-        ]
-      },
-      "ports":{
-        "description":"Database port configuration",
-        "type":"object",
-        "properties":{
-          "external_min":{
+          "ports_external_min":{
             "description":"Start of port range to expose to clients",
             "type":"integer",
             "default":10000
           },
-          "external_max":{
+          "ports_external_max":{
             "description":"End of port range to expose to clients",
             "type":"integer",
             "default":10100
           },
-          "internal_min":{
+          "ports_internal_min":{
             "description":"Start of port range to use internally with shards",
             "type":"integer",
             "default":20000
           },
-          "internal_max":{
+          "ports_internal_max":{
             "description":"End of port range to use internally with shards",
             "type":"integer",
             "default":20200
           }
         },
         "required":[
-          "external_min",
-          "external_max",
-          "internal_min",
-          "internal_max"
+          "cpus",
+          "mem",
+          "disk",
+          "ports_external_min",
+          "ports_external_max",
+          "ports_internal_min",
+          "ports_internal_max"
         ]
       }
     }

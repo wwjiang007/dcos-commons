@@ -25,14 +25,24 @@
     "PLACEMENT_CONSTRAINTS": "{{service.placement_constraint}}",
 
     "REDIS_COUNT": "{{redis.count}}",
-    "REDIS_CPUS": "{{redis.cpus}}",
-    "REDIS_MEM": "{{redis.mem}}",
-    "REDIS_DISK": "{{redis.disk}}",
+    "REDIS_LICENSE": "{{redis.license_key}}",
+    "REDIS_ADMIN_USER": "{{redis.admin_username}}",
+    "REDIS_ADMIN_PASSWORD": "{{redis.admin_password}}",
+    {{#redis.custom_fqdn}}
+    "REDIS_CLUSTER_FQDN": "{{redis.custom_fqdn}}",
+    {{/redis.custom_fqdn}}
+    {{^redis.custom_fqdn}}
+    "REDIS_CLUSTER_FQDN": "{{service.name}}.redis",
+    {{/redis.custom_fqdn}}
+    "REDIS_DEBUG": "{{redis.debug}}",
 
-    "PORT_EXTERNAL_MIN": "{{ports.external_min}}",
-    "PORT_EXTERNAL_MAX": "{{ports.external_max}}",
-    "PORT_INTERNAL_MIN": "{{ports.internal_min}}",
-    "PORT_INTERNAL_MAX": "{{ports.internal_max}}",
+    "REDIS_CPUS": "{{resources.cpus}}",
+    "REDIS_MEM": "{{resources.mem}}",
+    "REDIS_DISK": "{{resources.disk}}",
+    "PORT_EXTERNAL_MIN": "{{resources.ports_external_min}}",
+    "PORT_EXTERNAL_MAX": "{{resources.ports_external_max}}",
+    "PORT_INTERNAL_MIN": "{{resources.ports_internal_min}}",
+    "PORT_INTERNAL_MAX": "{{resources.ports_internal_max}}",
 
     "EXECUTOR_URI": "{{resource.assets.uris.executor-zip}}",
     "BOOTSTRAP_URI": "{{resource.assets.uris.bootstrap-zip}}",
