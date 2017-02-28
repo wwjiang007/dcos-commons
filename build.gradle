@@ -80,7 +80,8 @@ allprojects {
 }
 
 ext {
-    mesosVer = "1.2.0-checks-draft"
+//    mesosVer = "1.2.0-checks-draft"
+    mesosVer = "1.2.0-rc1"
 }
 
 subprojects {

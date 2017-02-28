@@ -664,12 +664,15 @@ public class ResourceUtils {
         return DiskInfo.newBuilder()
                 .setPersistence(Persistence.newBuilder()
                         .setId("")
-                        .setPrincipal(principal)
-                        .build())
+                        .setPrincipal(principal))
                 .setVolume(Volume.newBuilder()
                         .setContainerPath(containerPath)
                         .setMode(Volume.Mode.RW)
-                        .build())
+                        .setSource(Volume.Source.newBuilder()
+                                .setType(Volume.Source.Type.SANDBOX_PATH)
+                                .setSandboxPath(Volume.Source.SandboxPath.newBuilder()
+                                        .setType(Volume.Source.SandboxPath.Type.PARENT)
+                                        .setPath(containerPath))))
                 .build();
     }
 
