@@ -70,25 +70,37 @@ build_cli() {
     if [ "$1" = "darwin" ]; then
         # do not compress darwin binaries: upx compression results in 'Killed: 9'
         echo "Building $1 CLI: $EXE_OUTPUT (stripped)"
+        UPX_ENABLED=""
+    else
+        echo "Building $1 CLI: $EXE_OUTPUT (stripped/compressed)"
+        UPX_ENABLED="yes"
+    fi
+
+    # optimization: build a native version of the executable and check if the sha1 matches a
+    # previous native build. if the sha1 matches, then we can skip the rebuild.
+    SHA1SUM_FILENAME="${EXE_OUTPUT}.native.sha1sum"
+    go build -o ${EXE_OUTPUT}.native
+    BUILD_SHA1=$(sha1sum ${EXE_OUTPUT}.native | awk '{ print $1 }')
+
+    if [ -f $SHA1SUM_FILENAME -a -f $EXE_OUTPUT -a "$BUILD_SHA1" = "$(cat $SHA1SUM_FILENAME)" ]; then
+        # build output hasn't changed. skip.
+        echo "Skipping rebuild of ${EXE_OUTPUT}"
+    else
+        # build output is missing, or native build changed. build.
+        echo "Native SHA1 mismatch or missing ${EXE_OUTPUT}, rebuilding ${EXE_OUTPUT}"
+        echo $BUILD_SHA1 > $SHA1SUM_FILENAME
+
         # available GOOS/GOARCH permutations are listed at:
         # https://golang.org/doc/install/source#environment
-        CGO_ENABLED=0 GOOS=$1 GOARCH=386 go build -ldflags="-s -w"
-        if [ "${EXE_OUTPUT}" != "${CLI_EXE_NAME}" -a -f "${CLI_EXE_NAME}" ]; then
-            mv -vf "${CLI_EXE_NAME}" "${EXE_OUTPUT}"
+        CGO_ENABLED=0 GOOS=$1 GOARCH=386 go build -ldflags="-s -w" -o ${EXE_OUTPUT}
+
+        # use upx if available and if golang's output doesn't have problems with it:
+        if [ -n "$UPX_ENABLED" -a -n "$UPX_BINARY" ]; then
+            $UPX_BINARY -q --best ${EXE_OUTPUT}
         fi
+
         print_file_and_shasum "${EXE_OUTPUT}"
-        return
     fi
-    echo "Building $1 CLI: $EXE_OUTPUT (stripped/compressed)"
-    CGO_ENABLED=0 GOOS=$1 GOARCH=386 go build -ldflags="-s -w"
-    if [ "${EXE_OUTPUT}" != "${CLI_EXE_NAME}" -a -f "${CLI_EXE_NAME}" ]; then
-        mv -vf "${CLI_EXE_NAME}" "${EXE_OUTPUT}"
-    fi
-    # use upx if available and if golang's output doesn't have problems with it:
-    if [ -n "$UPX_BINARY" ]; then
-        $UPX_BINARY -q -9 "${EXE_OUTPUT}"
-    fi
-    print_file_and_shasum "${EXE_OUTPUT}"
 }
 
 # Configure GOPATH with dcos-commons symlink (rather than having it pull master):

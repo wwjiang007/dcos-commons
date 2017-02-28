@@ -60,14 +60,33 @@ echo "Created symlink $GOPATH_MESOSPHERE/$REPO_NAME -> $REPO_ROOT_DIR"
 pushd "$GOPATH_BOOTSTRAP"
 go get
 echo "Building ${EXE_FILENAME}"
-rm -f ${EXE_FILENAME}
-CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -ldflags="-s -w"
-# use upx if available and if golang's output doesn't have problems with it:
-if [ -n "$UPX_BINARY" ]; then
-    $UPX_BINARY -q -9 "${EXE_FILENAME}"
-fi
+
+# optimization: build a native version of the executable and check if the sha1 matches a
+# previous native build. if the sha1 matches, then we can skip the rebuild.
+SHA1SUM_FILENAME="${EXE_FILENAME}.native.sha1sum"
+go build -o ${EXE_FILENAME}.native
+BUILD_SHA1=$(sha1sum ${EXE_FILENAME}.native | awk '{ print $1 }')
+
 PKG_FILENAME=${EXE_FILENAME}.zip
-rm -f ${PKG_FILENAME}
-zip ${PKG_FILENAME} ${EXE_FILENAME}
+if [ -f $SHA1SUM_FILENAME -a -f $PKG_FILENAME -a "$BUILD_SHA1" = "$(cat $SHA1SUM_FILENAME)" ]; then
+    # build output hasn't changed. skip.
+    echo "Skipping rebuild of ${PKG_FILENAME}"
+else
+    # build output is missing, or native build changed. build.
+    echo "Native SHA1 mismatch or missing ${PKG_FILENAME}, rebuilding ${PKG_FILENAME}"
+    echo $BUILD_SHA1 > $SHA1SUM_FILENAME
+
+    # available GOOS/GOARCH permutations are listed at:
+    # https://golang.org/doc/install/source#environment
+    CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -ldflags="-s -w"
+
+    # use upx if available and if golang's output doesn't have problems with it:
+    if [ -n "$UPX_BINARY" ]; then
+        $UPX_BINARY -q --best ${EXE_FILENAME}
+    fi
+
+    rm -f ${PKG_FILENAME}
+    zip ${PKG_FILENAME} ${EXE_FILENAME}
+fi
 echo $(pwd)/${PKG_FILENAME}
 popd

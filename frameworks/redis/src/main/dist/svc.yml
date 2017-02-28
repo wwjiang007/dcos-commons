@@ -5,7 +5,7 @@ scheduler:
   user: {{FRAMEWORK_USER}}
 pods:
   redis:
-    user: root # to bind to port 53 (possibly other things?) -- note: doesn't seem to help with binding to 53
+    user: root # TODO originally added for binding to port 53, but it didn't help
     count: {{REDIS_COUNT}}
     placement: {{PLACEMENT_CONSTRAINTS}}
     container:
@@ -33,7 +33,8 @@ pods:
         #&& cat /opt/redislabs/config/supervisord.conf
         cmd: >
           ${MESOS_SANDBOX}/bootstrap
-          && rsyslogd -i ${MESOS_SANDBOX}/rsyslogd.pid
+          && rm /var/run/rsyslogd.pid
+          && rsyslogd
           && ls -l /dev/
           && ps aux
           && echo USER $(whoami)
@@ -74,7 +75,7 @@ pods:
             port-min: {{PORT_INTERNAL_MIN}}
             port-max: {{PORT_INTERNAL_MAX}}
         volume:
-          path: "redis-volume"
+          path: /var/opt/redislabs/persist
           type: ROOT
           size: {{REDIS_DISK}}
         configs:
