@@ -129,10 +129,12 @@ pods:
         goal: FINISHED
         cpus: 0.1
         memory: 32
+        #  && export PATH=/opt/redislabs/bin:$PATH
+        #  && echo "confdir=/etc/opt/redislabs" > /etc/opt/redislabs/paths.sh
+        #  && echo "bindir=/opt/redislabs/bin" >> /etc/opt/redislabs/paths.sh
         cmd: >
           echo ENABLING REDIS DEBUG
           && export PATH=/opt/redislabs/bin:$PATH
-          && echo "CONFDIR=/etc/opt/redislabs" > /etc/opt/redislabs/paths.sh
           && /opt/redislabs/bin/debug_mode on
           || exit 0
   proxylite:
