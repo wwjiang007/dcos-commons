@@ -55,63 +55,25 @@ dcos task
 dcos task exec <task name, eg redis-0-server> <command>
 ```
 
-- Connect to `redis-0` dashboard:
-1. Create this `repoxy` task via `/marathon` (will change once proxylite has https support):
+- Connect to Redis dashboard:
+
+Each node is individually addressible:
 ```
-{
-  "id": "/repoxy-all",
-  "cpus": 1,
-  "acceptedResourceRoles": [
-      "slave_public"
-  ],
-  "instances": 1,
-  "mem": 512,
-  "container": {
-    "type": "DOCKER",
-    "docker": {
-      "image": "mesosphere/repoxy:1.0.1a"
-    },
-    "volumes": [
-      {
-        "containerPath": "/opt/mesosphere",
-        "hostPath": "/opt/mesosphere",
-        "mode": "RO"
-      }
-    ]
-  },
-  "portDefinitions": [
-    {
-      "port": 0,
-      "protocol": "tcp"
-    },
-    {
-      "port": 0,
-      "protocol": "tcp"
-    },
-    {
-      "port": 0,
-      "protocol": "tcp"
-    },
-    {
-      "port": 0,
-      "protocol": "tcp"
-    },
-    {
-      "port": 0,
-      "protocol": "tcp"
-    }
-  ],
-  "cmd": "/proxyfiles/bin/start redis $PORT0",
-  "env": {
-    "PROXY_ENDPOINT_0": "node0-9443,redis-0-server,mesos,9443,/node0-api,/",
-    "PROXY_ENDPOINT_1": "node0-8443,redis-0-server,mesos,8443,/node0,/",
-    "PROXY_ENDPOINT_2": "node1-8443,redis-1-server,mesos,8443,/node1,/",
-    "PROXY_ENDPOINT_3": "node2-8443,redis-2-server,mesos,8443,/node2,/"
-  }
-}
+http://your-cluster.com/service/redis/ui0/
+http://your-cluster.com/service/redis/ui1/
+...
 ```
-2. Once the `repoxy-all` task is running, look at its `stdout` (via sandbox on `/mesos` or task info on `/marathon`) to get the Redis dashboard URL
-3. When configuring redis, note that the persistent volume (survives container restarts) should be at `/mnt/mesos/sandbox/redis-volume`
+
+- Query Redis API:
+
+Each node is individually addressible, but note that an auth token must be provided via HTTP header:
+```
+curl -H "Authorization: token=$(dcos config show core.dcos_acs_token)" \
+  http://your-cluster.com/service/redis/api0/v1/command-on-node0
+curl -H "Authorization: token=$(dcos config show core.dcos_acs_token)" \
+  http://your-cluster.com/service/redis/api1/v1/command-on-node1
+...
+```
 
 ## Useful files
 
