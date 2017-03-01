@@ -52,6 +52,10 @@ public class DefaultService implements Service {
         this(YAMLServiceSpecFactory.generateRawSpecFromYAML(yamlSpecification));
     }
 
+    public DefaultService() throws Exception {
+        //No initialization needed
+    }
+
     public DefaultService(File pathToYamlSpecification) throws Exception {
         this(YAMLServiceSpecFactory.generateRawSpecFromYAML(pathToYamlSpecification));
     }
@@ -66,6 +70,10 @@ public class DefaultService implements Service {
     }
 
     public DefaultService(DefaultScheduler.Builder schedulerBuilder) throws Exception {
+        initService(schedulerBuilder);
+    }
+
+    protected void initService(DefaultScheduler.Builder schedulerBuilder) throws Exception {
         this.schedulerBuilder = schedulerBuilder;
         this.serviceSpec = schedulerBuilder.getServiceSpec();
 
@@ -83,9 +91,6 @@ public class DefaultService implements Service {
             unlock(curatorMutex);
             curatorClient.close();
         }
-    }
-
-    public DefaultService(){
     }
 
     /**
@@ -107,7 +112,7 @@ public class DefaultService implements Service {
 
         LOGGER.info("Acquiring ZK lock on {}...", lockPath);
         final String failureLogMsg = String.format("Failed to acquire ZK lock on %s. " +
-                "Duplicate service named '%s', or recently restarted instance of '%s'?",
+                        "Duplicate service named '%s', or recently restarted instance of '%s'?",
                 lockPath, serviceName, serviceName);
         try {
             for (int i = 0; i < lockAttempts; ++i) {
@@ -210,10 +215,10 @@ public class DefaultService implements Service {
         final String serviceName = serviceSpec.getName();
 
         Protos.FrameworkInfo.Builder fwkInfoBuilder = Protos.FrameworkInfo.newBuilder()
-                                                                     .setName(serviceName)
-                                                                     .setFailoverTimeout(failoverTimeoutSec)
-                                                                     .setUser(userString)
-                                                                     .setCheckpoint(true);
+                .setName(serviceName)
+                .setFailoverTimeout(failoverTimeoutSec)
+                .setUser(userString)
+                .setCheckpoint(true);
 
         // Use provided role if specified, otherwise default to "<svcname>-role".
         if (StringUtils.isEmpty(serviceSpec.getRole())) {
