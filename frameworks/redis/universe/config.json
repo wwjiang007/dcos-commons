@@ -54,12 +54,12 @@
           "license_key":{
             "description":"Redis Pack License Key",
             "type":"string",
-            "default":"a-valid-key"
+            "default":""
           },
           "admin_username":{
             "description":"Redis Administrator username",
             "type":"string",
-            "default":"insecure"
+            "default":"insecure@insecure.biz"
           },
           "admin_password":{
             "description":"Redis Administrator password",
@@ -102,6 +102,11 @@
             "description":"Redis persistent disk requirements (in MB)",
             "type":"integer",
             "default":32768
+          },
+          "disk_path":{
+            "description":"Path to use for Redis persistent disk volume",
+            "type":"string",
+            "default":"/var/opt/redislabs/persist"
           },
           "ports_external_min":{
             "description":"Start of port range to expose to clients",

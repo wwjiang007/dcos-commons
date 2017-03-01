@@ -8,7 +8,7 @@ pods:
     count: {{REDIS_COUNT}}
     placement: {{PLACEMENT_CONSTRAINTS}}
     container:
-      image-name: nickbp/redis-test:1
+      image-name: nickbp/redis-test:2
       rlimits:
         RLIMIT_SIGPENDING:
           soft: 483022
@@ -27,17 +27,10 @@ pods:
     tasks:
       server:
         goal: RUNNING
-        # note: for debug step, we just do some parts manually, since '/opt/redislabs/bin/debug_mode on' is broken:
+        # note: debug both here and in 'enable-debug' below.
         cmd: >
           ${MESOS_SANDBOX}/bootstrap
           && echo USER $(whoami)
-          {{#REDIS_DEBUG}}
-          && echo ENABLING REDIS DEBUG
-          && for PROCESS in cluster_wd node_wd cnm_exec cnm_http cnm_https cm_server redis_mgr resource_mgr alert_mgr; do
-            echo - $PROCESS;
-            echo "{ \"loggers\": { \"${PROCESS}\": { \"level\": \"DEBUG\" } } }" > ${PROCESS}_debug.conf;
-          done
-          {{/REDIS_DEBUG}}
           && echo PDNS CONFIG
           && mkdir -p /etc/opt/redislabs/pdns.conf.d/
           && echo "local-address=$(sh ${MESOS_SANDBOX}/get-ip.sh)" > /etc/opt/redislabs/pdns.conf.d/fixed-ip.conf
@@ -47,7 +40,6 @@ pods:
           && echo START RSYSLOGD
           && rm /var/run/rsyslogd.pid
           && rsyslogd
-          && ls -l /dev/
           && ps aux
           && echo START REDIS
           && /opt/start.sh
@@ -55,6 +47,7 @@ pods:
           # TODO replace with a more valid check that supervisord is happy
           # $ sudo -u redislabs /opt/redislabs/bin/supervisorctl status
           # unix:///tmp/rlec_supervisord.sock refused connection
+          # TODO run /opt/redislabs/bin/rlcheck —suppress-tests=verify_bootstrap_status,verify_processes
           cmd: >-
             INSTANCES=$(ps aux | grep bin/dmcproxy | grep -v grep)
             && echo INSTANCES $INSTANCES
@@ -62,6 +55,7 @@ pods:
           interval: 10
           delay: 15
           timeout: 60
+        # TODO define a health-check to say whether a given node should be restarted
         cpus: {{REDIS_CPUS}}
         memory: {{REDIS_MEM}}
         ports:
@@ -89,7 +83,7 @@ pods:
             port-min: {{PORT_INTERNAL_MIN}}
             port-max: {{PORT_INTERNAL_MAX}}
         volume:
-          path: /var/opt/redislabs/persist
+          path: {{REDIS_DISK_PATH}}
           type: ROOT
           size: {{REDIS_DISK}}
         configs:
@@ -109,21 +103,38 @@ pods:
         cpus: 0.1
         memory: 32
         #TODO: provide "rack_id <id>" once dcos-commons supports exposing mesos agent attributes via env
+        #TODO: 'rladmin cluster join' always returns 0 code. follow up with '/opt/redislabs/bin/rlcheck' to verify success
         cmd: >
+          {{#REDIS_LICENSE}}
           LICENSE_FILE=$(mktemp)
           && echo "{{REDIS_LICENSE}}" > $LICENSE_FILE
-          && echo TODO RUN /opt/redislabs/bin/rladmin cluster create name {{REDIS_CLUSTER_FQDN}} user {{REDIS_ADMIN_USER}} password {{REDIS_ADMIN_PASSWORD}} license_file $LICENSE_FILE
+          && /opt/redislabs/bin/rladmin cluster create name {{REDIS_CLUSTER_FQDN}} username {{REDIS_ADMIN_USER}} password {{REDIS_ADMIN_PASSWORD}} persistent_path {{REDIS_DISK_PATH}} license_file $LICENSE_FILE
           && rm -f $LICENSE_FILE
+          {{/REDIS_LICENSE}}
+          {{^REDIS_LICENSE}}
+          /opt/redislabs/bin/rladmin cluster create name {{REDIS_CLUSTER_FQDN}} username {{REDIS_ADMIN_USER}} password {{REDIS_ADMIN_PASSWORD}} persistent_path {{REDIS_DISK_PATH}}
+          {{/REDIS_LICENSE}}
       config-join:
         goal: FINISHED
         cpus: 0.1
         memory: 32
         #TODO: provide "rack_id <id>" once dcos-commons supports exposing mesos agent attributes via env
-        #TODO: provide "replace_node <uid>" when replacing a prior node
+        #TODO: provide "replace_node <uid>" when replacing a prior node (i.e. after a 'pod replace'). <uid> could be provided as an envvar
+        #TODO: 'rladmin cluster join' always returns 0 code. follow up with '/opt/redislabs/bin/rlcheck' to verify success
         cmd: >
           ${MESOS_SANDBOX}/bootstrap -resolve-hosts redis-0-server.{{FRAMEWORK_NAME}}.mesos
           && TASK_ZERO_IP=$(python3 -c "import socket; print(socket.gethostbyname('redis-0-server.{{FRAMEWORK_NAME}}.mesos'))")
-          && echo TODO RUN /opt/redislabs/bin/rladmin cluster join nodes $TASK_ZERO_IP username {{REDIS_ADMIN_USER}} password {{REDIS_ADMIN_PASSWORD}}
+          && /opt/redislabs/bin/rladmin cluster join nodes $TASK_ZERO_IP username {{REDIS_ADMIN_USER}} password {{REDIS_ADMIN_PASSWORD}} persistent_path {{REDIS_DISK_PATH}}
+      enable-debug:
+        goal: FINISHED
+        cpus: 0.1
+        memory: 32
+        cmd: >
+          echo ENABLING REDIS DEBUG
+          && export PATH=/opt/redislabs/bin:$PATH
+          && echo "CONFDIR=/etc/opt/redislabs" > /etc/opt/redislabs/paths.sh
+          && /opt/redislabs/bin/debug_mode on
+          || exit 0
   proxylite:
     count: 1
     container:
@@ -157,6 +168,14 @@ plans:
       redis-init:
         strategy: serial
         pod: redis
+        # note: following init/for recovery, there's no separation between nodes 0 and 1-N
         steps:
+          {{#REDIS_DEBUG}}
+          - 0: [[config-init], [enable-debug]]
+          - default: [[config-join], [enable-debug]]
+          {{/REDIS_DEBUG}}
+          {{^REDIS_DEBUG}}
           - 0: [[config-init]]
           - default: [[config-join]]
+          {{/REDIS_DEBUG}}
+  # TODO: add 'cleanup' plan/task which allows removing old nodes?
