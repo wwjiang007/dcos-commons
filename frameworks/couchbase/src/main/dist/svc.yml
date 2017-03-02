@@ -87,15 +87,9 @@ pods:
           yum -y install openssl &&
           rpm -i couchbase-server-enterprise-*.rpm &&
           chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
-          cd /opt/couchbase/var/lib/couchbase &&
-          rm -rf config/ stats/ logs/ crash/ data/ &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config config &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs logs &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats stats &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data data &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index index &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash crash &&
-          cd .. &&
+          cd /opt/couchbase/var/lib &&
+          rm -rf couchbase/ &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase couchbase &&
           ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/moxi moxi &&
           /opt/couchbase/bin/couchbase-server -- -noinput
         readiness-check:
@@ -158,12 +152,7 @@ pods:
         goal: FINISHED
         cmd: >
           /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-index-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-remove=couchbase-data-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase
         resource-set: cli-resources
   couchbase_index:
 {{#COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
@@ -248,15 +237,9 @@ pods:
           yum -y install openssl &&
           rpm -i couchbase-server-enterprise-*.rpm &&
           chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
-          cd /opt/couchbase/var/lib/couchbase &&
-          rm -rf config/ stats/ logs/ crash/ data/ &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config config &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs logs &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats stats &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data data &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index index &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash crash &&
-          cd .. &&
+          cd /opt/couchbase/var/lib &&
+          rm -rf couchbase/ &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase couchbase &&
           ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/moxi moxi &&
           /opt/couchbase/bin/couchbase-server -- -noinput
         readiness-check:
@@ -273,12 +256,7 @@ pods:
         goal: FINISHED
         cmd: >
           /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-remove=couchbase-index-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase
         resource-set: cli-resources
   couchbase_query:
 {{#COUCHBASE_USE_PLACEMENT_CONSTRAINTS}}
@@ -363,15 +341,9 @@ pods:
           yum -y install openssl &&
           rpm -i couchbase-server-enterprise-*.rpm &&
           chown -R couchbase:couchbase $MESOS_SANDBOX/couchbase-container-path/var &&
-          cd /opt/couchbase/var/lib/couchbase &&
-          rm -rf config/ stats/ logs/ crash/ data/ &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config config &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs logs &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats stats &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data data &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index index &&
-          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash crash &&
-          cd .. &&
+          cd /opt/couchbase/var/lib &&
+          rm -rf couchbase/ &&
+          ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase couchbase &&
           ln -s $MESOS_SANDBOX/couchbase-container-path/var/lib/moxi moxi &&
           /opt/couchbase/bin/couchbase-server -- -noinput
         readiness-check:
@@ -388,12 +360,7 @@ pods:
         goal: FINISHED
         cmd: >
           /opt/couchbase/bin/couchbase-cli rebalance -c couchbase-data-0-server.{{FRAMEWORK_NAME}}.mesos:8091 -u Administrator -p password --server-remove=couchbase-query-$POD_INSTANCE_INDEX-server.{{FRAMEWORK_NAME}}.mesos:8091 &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/config &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/logs &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/stats &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/data &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/index &&
-          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase/crash
+          rm -rf $MESOS_SANDBOX/couchbase-container-path/var/lib/couchbase
         resource-set: cli-resources
 #plans:
 #  deploy:

@@ -10,11 +10,6 @@
             "type":"string",
             "default":"couchbase"
           },
-          "sleep" : {
-            "description":"The sleep duration in seconds before tasks exit.",
-            "type":"number",
-            "default":1000
-          },
           "spec_file" : {
             "description":"The name of the service spec yaml file.",
             "type":"string",
