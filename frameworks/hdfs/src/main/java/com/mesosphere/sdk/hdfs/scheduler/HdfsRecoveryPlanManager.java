@@ -5,7 +5,6 @@ import com.mesosphere.sdk.offer.TaskException;
 import com.mesosphere.sdk.offer.TaskUtils;
 import com.mesosphere.sdk.scheduler.plan.*;
 import com.mesosphere.sdk.scheduler.plan.strategy.ParallelStrategy;
-import com.mesosphere.sdk.scheduler.plan.strategy.SerialStrategy;
 import com.mesosphere.sdk.scheduler.recovery.DefaultRecoveryPlanManager;
 import com.mesosphere.sdk.scheduler.recovery.DefaultRecoveryStep;
 import com.mesosphere.sdk.scheduler.recovery.FailureUtils;
@@ -54,7 +53,7 @@ public class HdfsRecoveryPlanManager extends DefaultRecoveryPlanManager {
                     .filter(step -> !nnStepNames.contains(step.getName()))
                     .collect(Collectors.toList());
             phases.add(
-                    new DefaultPhase(phase.getName(), steps);
+                    new DefaultPhase(phase.getName(), steps));
         }
 
         if (!nameNodeRecoveryPhase.getChildren().isEmpty()) {

@@ -5,7 +5,6 @@ import com.google.protobuf.TextFormat;
 import com.mesosphere.sdk.scheduler.recovery.RecoveryPlanManagerFactory;
 import com.mesosphere.sdk.scheduler.recovery.constrain.LaunchConstrainer;
 import com.mesosphere.sdk.scheduler.recovery.monitor.FailureMonitor;
-import com.mesosphere.sdk.scheduler.plan.strategy.SerialStrategy;
 import com.mesosphere.sdk.specification.*;
 import com.mesosphere.sdk.specification.yaml.RawServiceSpec;
 import com.mesosphere.sdk.state.*;
@@ -581,9 +580,9 @@ public class DefaultScheduler implements Scheduler, Observer {
         deploymentPlanManager = new DefaultPlanManager(deployPlan);
 
         // All plans are initially created with an interrupted strategy. We generally don't want the deployment plan to
-        // getRequirement out interrupted. CanaryStrategy is an exception which explicitly indicates that the deployment plan
-        // should getRequirement out interrupted, but CanaryStrategies are only applied to individual Phases, not the Plan as a
-        // whole.
+        // getRequirement out interrupted. CanaryStrategy is an exception which explicitly indicates that the deployment
+        // plan should getRequirement out interrupted, but CanaryStrategies are only applied to individual Phases, not
+        // the Plan as a whole.
         deploymentPlanManager.getPlan().proceed();
     }
 

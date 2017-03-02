@@ -1,10 +1,8 @@
 package com.mesosphere.sdk.scheduler.plan;
 
 import com.mesosphere.sdk.reconciliation.Reconciler;
-import com.mesosphere.sdk.scheduler.plan.strategy.SerialStrategy;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 /**
  * Phase that implements reconciliation. It has exactly one Step, the reconciliation {@link Step}.
