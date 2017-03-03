@@ -136,7 +136,12 @@ public class OfferEvaluator {
         }
 
         // Executor Resources
-        if (offerRequirement.getExecutorRequirementOptional().isPresent()){
+        if (offerRequirement.getExecutorRequirementOptional().isPresent() &&
+            offerRequirement.getExecutorRequirementOptional().get()
+                    .getExecutorInfo()
+                    .getExecutorId()
+                    .getValue()
+                    .isEmpty()) {
             ExecutorRequirement executorRequirement = offerRequirement.getExecutorRequirementOptional().get();
             List<Resource> resources = executorRequirement.getResourceRequirements().stream()
                     .map(resourceRequirement -> resourceRequirement.getResource())

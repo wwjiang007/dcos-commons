@@ -1,47 +1,39 @@
-name: hello-world
+name: "hello-world"
 pods:
   hello:
-    container:
-      image-name: ubuntu:latest
-    count: {{HELLO_COUNT}}
-    placement: {{HELLO_PLACEMENT}}
+    count: 2
+    resource-sets:
+      hello-resources:
+        cpus: 1
+        memory: 256
+      sidecar-resources:
+        cpus: 1
+        memory: 256
     tasks:
       server:
         goal: RUNNING
-        cmd: echo hello >> hello-container-path/output && sleep $SLEEP_DURATION
-        cpus: {{HELLO_CPUS}}
-        memory: {{HELLO_MEM}}
-        volume:
-          path: hello-container-path
-          type: ROOT
-          size: {{HELLO_DISK}}
+        cmd: echo $TASK_NAME >> output && sleep $SLEEP_DURATION
+        resource-set: hello-resources
         env:
-          SLEEP_DURATION: {{SLEEP_DURATION}}
-  world:
-    count: {{WORLD_COUNT}}
-    placement: {{WORLD_PLACEMENT}}
-    tasks:
-      server:
-        goal: RUNNING
-        cmd: >
-               echo world1 >> world-container-path1/output &&
-               echo world2 >> world-container-path2/output &&
-               sleep $SLEEP_DURATION
-        cpus: {{WORLD_CPUS}}
-        memory: {{WORLD_MEM}}
-        volumes:
-          vol1:
-            path: world-container-path1
-            type: ROOT
-            size: {{HELLO_DISK}}
-          vol2:
-            path: world-container-path2
-            type: ROOT
-            size: {{HELLO_DISK}}
+          SLEEP_DURATION: 1000
+      sidecar:
+        goal: FINISHED
+        cmd: echo $TASK_NAME >> output && sleep $SLEEP_DURATION
+        resource-set: sidecar-resources
         env:
-          SLEEP_DURATION: {{SLEEP_DURATION}}
-        readiness-check:
-          cmd: BYTES="$(wc -c world-container-path2/output | awk '{print $1;}')" && [ $BYTES -gt 0 ]
-          interval: 5
-          delay: 0
-          timeout: 10
+          SLEEP_DURATION: 1000
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      sidecar-deploy:
+        strategy: parallel
+        pod: hello
+        tasks: [server]
+  sidecar:
+    strategy: serial
+    phases:
+      sidecar-deploy:
+        strategy: parallel
+        pod: hello
+        tasks: [sidecar]
