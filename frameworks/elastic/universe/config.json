@@ -39,7 +39,7 @@
       "required": [
         "name",
         "user",
-        "plan_strategy"
+        "deploy_strategy"
       ]
     },
     "elasticsearch": {
