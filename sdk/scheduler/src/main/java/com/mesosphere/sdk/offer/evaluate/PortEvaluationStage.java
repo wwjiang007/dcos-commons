@@ -19,7 +19,7 @@ import static com.mesosphere.sdk.offer.evaluate.EvaluationOutcome.*;
  * {@link org.apache.mesos.Protos.ExecutorInfo} where appropriate so that the port is available in their respective
  * environments.
  */
-public class PortEvaluationStage extends ResourceEvaluationStage implements OfferEvaluationStage {
+public class PortEvaluationStage extends ResourceEvaluationStage {
     private static final Logger LOGGER = LoggerFactory.getLogger(PortEvaluationStage.class);
 
     private final String envKey;

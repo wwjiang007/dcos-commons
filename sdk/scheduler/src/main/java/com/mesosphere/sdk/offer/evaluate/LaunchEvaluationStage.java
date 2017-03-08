@@ -34,6 +34,13 @@ public class LaunchEvaluationStage implements OfferEvaluationStage {
             taskBuilder.setExecutor(executorBuilder.get());
         }
 
+        Protos.Environment.Builder taskEnvBuilder = taskBuilder.getCommandBuilder().getEnvironmentBuilder();
+        for (Protos.Attribute attribute : offer.getAttributesList()) {
+            taskEnvBuilder.addVariablesBuilder()
+                    .setName(attribute.getName())
+                    .setValue(AttributeStringUtils.valueString(attribute));
+        }
+
         return pass(
                 this,
                 Arrays.asList(new LaunchOfferRecommendation(offer, taskBuilder.build())),

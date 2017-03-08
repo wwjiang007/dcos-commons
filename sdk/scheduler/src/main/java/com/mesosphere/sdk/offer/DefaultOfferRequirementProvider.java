@@ -351,6 +351,8 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
             String serviceName, PodInstance podInstance, TaskSpec taskSpec, CommandSpec commandSpec) {
         Map<String, String> environment = new HashMap<>();
 
+        // TODO move these into LaunchEvaluationStage
+
         // Developer-provided or user-provided TASKCFG_* envvars (overrides ServiceSpec)
         environment.putAll(commandSpec.getEnvironment());
 
@@ -377,7 +379,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
             }
         }
 
-        // Note: other envvars which are based on the offer contents (eg PORT_<name>=<num> and ATTRIBUTE_<name>=<val>)
+        // Note: other envvars which are based on the offer contents (e.g. PORT_<name>=<num> and ATTRIBUTE_<name>=<val>)
         //       are set within implementations of OfferEvaluationStage.
 
         return CommonTaskUtils.fromMapToEnvironment(environment).build();
