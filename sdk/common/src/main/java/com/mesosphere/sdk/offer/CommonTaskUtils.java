@@ -572,14 +572,10 @@ public class CommonTaskUtils {
 
     public static TerminationPolicy getTerminationPolicy(TaskInfo taskInfo) throws TaskException {
         String terminationPolicyString = getLabel(taskInfo, TERMINATION_POLICY_LABEL);
-        return new TerminationPolicy(Integer.valueOf(terminationPolicyString));
+        return new TerminationPolicy(Integer.parseInt(terminationPolicyString));
     }
 
     private static String getLabel(TaskInfo taskInfo, String key) throws TaskException {
-        List<String> goalNames = Arrays.stream(GoalState.values())
-                .map(goalState -> goalState.name())
-                .collect(Collectors.toList());
-
         Optional<String> valueOptional = CommonTaskUtils.findLabelValue(taskInfo.getLabels(), key);
         if (!valueOptional.isPresent()) {
             throw new TaskException("TaskInfo does not contain label with key: " + key);

@@ -5,22 +5,17 @@ import org.apache.mesos.Protos;
 import com.mesosphere.sdk.testutils.TaskTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class CustomExecutorTest {
     private static final String TASK_TYPE = "TASK_TYPE";
     private static final String TEST = "TEST";
-
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Mock
     ExecutorDriver mockExecutorDriver;
@@ -154,7 +149,7 @@ public class CustomExecutorTest {
     }
 
     private CustomExecutor getTestExecutor() {
-        final ExecutorService executorService = Executors.newCachedThreadPool();
+        final ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         final TestExecutorTaskFactory testExecutorTaskFactory = new TestExecutorTaskFactory();
         return new CustomExecutor(executorService, testExecutorTaskFactory);
     }

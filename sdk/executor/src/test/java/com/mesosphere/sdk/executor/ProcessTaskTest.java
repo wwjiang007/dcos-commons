@@ -4,17 +4,26 @@ import com.mesosphere.sdk.offer.CommonTaskUtils;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.SlaveID;
+import org.awaitility.Awaitility;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.to;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.mockito.Mockito.timeout;
 
 public class ProcessTaskTest {
+    @Rule
+    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
+
     private static final String EXECUTOR_NAME = "TEST_EXECUTOR";
     private static final String TASK_NAME = "TEST_TASK";
 
@@ -85,6 +94,7 @@ public class ProcessTaskTest {
 
     @Test
     public void testExitOnCompletion() throws Exception {
+        exit.expectSystemExit();
         final ExecutorDriver mockExecutorDriver = Mockito.mock(ExecutorDriver.class);
         final Protos.ExecutorInfo executorInfo = Protos.ExecutorInfo
                 .newBuilder()
@@ -112,8 +122,7 @@ public class ProcessTaskTest {
         executorService.submit(processTask);
 
         // Wait for processTask to run
-        Mockito.verify(mockExecutorDriver, timeout(1000)).stop();
-        Assert.assertFalse(processTask.isAlive());
+        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilCall(to(processTask).isAlive(), equalTo(false));
     }
 
     @Test

@@ -29,7 +29,8 @@ def setup_module(module):
 
 
 def teardown_module(module):
-    install.uninstall(PACKAGE_NAME)
+    #install.uninstall(PACKAGE_NAME)
+    pass
 
 
 @pytest.mark.data_integrity

@@ -28,6 +28,8 @@ public interface Step extends Element, Interruptible {
      */
     Optional<PodInstanceRequirement> start();
 
+    Optional<PodInstanceRequirement> getPodInstanceRequirement();
+
     /**
      * Notifies the Step whether the {@link PodInstanceRequirement} previously returned by
      * {@link #start()} has been successfully accepted/fulfilled. The {@code recommendations} param is

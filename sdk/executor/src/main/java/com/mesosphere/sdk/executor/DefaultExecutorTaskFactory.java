@@ -2,7 +2,6 @@ package com.mesosphere.sdk.executor;
 
 import com.mesosphere.sdk.offer.CommonTaskUtils;
 import com.mesosphere.sdk.offer.TaskException;
-import com.mesosphere.sdk.specification.GoalState;
 import com.mesosphere.sdk.specification.TerminationPolicy;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;

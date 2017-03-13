@@ -48,14 +48,19 @@ public class HdfsRecoveryPlanManager extends DefaultRecoveryPlanManager {
     @Override
     public Plan getPlan() {
         List<Phase> phases = new ArrayList<>();
-        List<String> nnStepNames = nameNodeRecoveryPhase.getChildren().stream()
-                .map(step -> step.getName())
+        List<String> nnPodInstanceNames = nameNodeRecoveryPhase.getChildren().stream()
+                .map(step -> step.getPodInstanceRequirement())
+                .filter(podInstanceRequirement -> podInstanceRequirement.isPresent())
+                .map(podInstanceRequirement -> podInstanceRequirement.get().getPodInstance().getName())
                 .collect(Collectors.toList());
 
         // Filter out steps handled by name node recovery from the default plan.
         for (Phase phase : super.getPlan().getChildren()) {
             List<Step> steps = phase.getChildren().stream()
-                    .filter(step -> !nnStepNames.contains(step.getName()))
+                    .filter(step -> step.getPodInstanceRequirement().isPresent())
+                    .filter(step ->
+                            !nnPodInstanceNames.contains(
+                                    step.getPodInstanceRequirement().get().getPodInstance().getName()))
                     .collect(Collectors.toList());
             phases.add(
                     new DefaultPhase(

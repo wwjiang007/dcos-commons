@@ -18,7 +18,7 @@ public class TerminationPolicy {
         if (value == null) {
             this.value = 0;
         } else {
-            this.value = Integer.valueOf(value);
+            this.value = Integer.parseInt(value);
         }
     }
 

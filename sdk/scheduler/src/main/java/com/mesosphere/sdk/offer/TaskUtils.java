@@ -7,7 +7,6 @@ import com.mesosphere.sdk.scheduler.plan.Step;
 import com.mesosphere.sdk.specification.*;
 import com.mesosphere.sdk.state.StateStore;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -275,7 +274,10 @@ public class TaskUtils {
      * @param terminationPolicy The termination policy for the task.
      * @return The labeled TaskInfo
      */
-    public static TaskInfo.Builder setTerminationPolicy(TaskInfo.Builder taskInfoBuilder, TerminationPolicy terminationPolicy) {
+    public static TaskInfo.Builder setTerminationPolicy(
+            TaskInfo.Builder taskInfoBuilder,
+            TerminationPolicy terminationPolicy) {
+
         return taskInfoBuilder
                 .setLabels(withLabelSet(taskInfoBuilder.getLabels(),
                         TERMINATION_POLICY_LABEL,
