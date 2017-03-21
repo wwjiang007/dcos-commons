@@ -130,9 +130,9 @@ public class DefaultOfferRequirementProviderTest {
         Assert.assertEquals("test-executor-uri", uris.get(0).getValue());
         Assert.assertEquals("test-libmesos-uri", uris.get(1).getValue());
         Assert.assertEquals("https://downloads.mesosphere.com/java/jre-8u112-linux-x64-jce-unlimited.tar.gz", uris.get(2).getValue());
-        String artifactDirUrl = String.format("http://api.%s.marathon.%s/v1/artifacts/template/%s/%s/%s/",
+        String artifactDirUrl = String.format(
+                "http://api.%s.marathon.l4lb.thisdcos.directory/v1/artifacts/template/%s/%s/%s/",
                 TestConstants.SERVICE_NAME,
-                ResourceUtils.VIP_HOST_TLD,
                 uuid.toString(),
                 podInstance.getPod().getType(),
                 tasksToLaunch.get(0));

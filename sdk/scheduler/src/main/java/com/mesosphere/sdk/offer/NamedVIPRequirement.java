@@ -1,7 +1,8 @@
 package com.mesosphere.sdk.offer;
 
-import com.mesosphere.sdk.offer.evaluate.NamedVIPEvaluationStage;
+import com.mesosphere.sdk.offer.evaluate.DiscoveryInfoWriter;
 import com.mesosphere.sdk.offer.evaluate.OfferEvaluationStage;
+import com.mesosphere.sdk.offer.evaluate.PortEvaluationStage;
 
 import java.util.Optional;
 
@@ -51,15 +52,12 @@ public class NamedVIPRequirement extends PortRequirement {
 
     @Override
     public OfferEvaluationStage getEvaluationStage(String taskName) {
-        return new NamedVIPEvaluationStage(
+        return new PortEvaluationStage(
                 getResource(),
                 taskName,
                 getPortName(),
                 getPort(),
                 getCustomEnvKey(),
-                getProtocol(),
-                getVisibility(),
-                getVipName(),
-                getVipPort());
+                DiscoveryInfoWriter.createVIPWriter(getProtocol(), getVisibility(), getVipName(), getVipPort()));
     }
 }

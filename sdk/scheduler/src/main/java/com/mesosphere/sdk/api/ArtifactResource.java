@@ -2,7 +2,7 @@ package com.mesosphere.sdk.api;
 
 import com.mesosphere.sdk.config.ConfigStore;
 import com.mesosphere.sdk.config.ConfigStoreException;
-import com.mesosphere.sdk.offer.ResourceUtils;
+import com.mesosphere.sdk.offer.DiscoveryUtils;
 import com.mesosphere.sdk.specification.ConfigFileSpec;
 import com.mesosphere.sdk.specification.PodSpec;
 import com.mesosphere.sdk.specification.ServiceSpec;
@@ -28,11 +28,9 @@ import static com.mesosphere.sdk.api.ResponseUtils.plainOkResponse;
  */
 @Path("/v1/artifacts")
 public class ArtifactResource {
-    private static final String ARTIFACT_URI_FORMAT =
-            "http://api.%s.marathon." + ResourceUtils.VIP_HOST_TLD + "/v1/artifacts/template/%s/%s/%s/%s";
+    private static final String ARTIFACT_URI_FORMAT = "http://%s/v1/artifacts/template/%s/%s/%s/%s";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-
     private final ConfigStore<ServiceSpec> configStore;
 
     /**
@@ -41,7 +39,8 @@ public class ArtifactResource {
      */
     public static String getTemplateUrl(
             String serviceName, UUID configId, String podType, String taskName, String configName) {
-        return String.format(ARTIFACT_URI_FORMAT, serviceName, configId, podType, taskName, configName);
+        String schedulerApiVipHost = DiscoveryUtils.toVIPHost(String.format("%s.marathon", serviceName), "api");
+        return String.format(ARTIFACT_URI_FORMAT, schedulerApiVipHost, configId, podType, taskName, configName);
     }
 
     public ArtifactResource(ConfigStore<ServiceSpec> configStore) {

@@ -1,5 +1,6 @@
 package com.mesosphere.sdk.offer;
 
+import com.mesosphere.sdk.offer.evaluate.DiscoveryInfoWriter;
 import com.mesosphere.sdk.offer.evaluate.OfferEvaluationStage;
 import com.mesosphere.sdk.offer.evaluate.PortEvaluationStage;
 
@@ -37,6 +38,12 @@ public class PortRequirement extends ResourceRequirement {
 
     @Override
     public OfferEvaluationStage getEvaluationStage(String taskName) {
-        return new PortEvaluationStage(getResource(), taskName, getPortName(), getPort(), getCustomEnvKey());
+        return new PortEvaluationStage(
+                getResource(),
+                taskName,
+                getPortName(),
+                getPort(),
+                getCustomEnvKey(),
+                DiscoveryInfoWriter.createPortWriter(getPortName()));
     }
 }

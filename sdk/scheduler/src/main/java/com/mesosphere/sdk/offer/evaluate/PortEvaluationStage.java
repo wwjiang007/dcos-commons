@@ -25,15 +25,22 @@ public class PortEvaluationStage extends ResourceEvaluationStage implements Offe
     private final String portName;
     private final int port;
     private final Optional<String> customEnvKey;
+    private final DiscoveryInfoWriter discoveryInfoWriter;
 
     private String resourceId;
 
     public PortEvaluationStage(
-            Protos.Resource resource, String taskName, String portName, int port, Optional<String> customEnvKey) {
+            Protos.Resource resource,
+            String taskName,
+            String portName,
+            int port,
+            Optional<String> customEnvKey,
+            DiscoveryInfoWriter discoveryInfoWriter) {
         super(resource, taskName);
         this.portName = portName;
         this.port = port;
         this.customEnvKey = customEnvKey;
+        this.discoveryInfoWriter = discoveryInfoWriter;
     }
 
     @Override
@@ -78,18 +85,19 @@ public class PortEvaluationStage extends ResourceEvaluationStage implements Offe
 
     @Override
     protected void setProtos(PodInfoBuilder podInfoBuilder, Protos.Resource resource) {
-        long port = resource.getRanges().getRange(0).getBegin();
-        Protos.Resource.Builder resourceBuilder;
+        // Note: We use the actual port from the resource, NOT the 'port' member.
+        //       The 'port' member may be '0' for dynamic ports.
+        int actualPort = (int) resource.getRanges().getRange(0).getBegin();
 
         if (getTaskName().isPresent()) {
             String taskName = getTaskName().get();
             Protos.TaskInfo.Builder taskBuilder = podInfoBuilder.getTaskBuilder(taskName);
-            taskBuilder.setCommand(withPortEnvironmentVariable(taskBuilder.getCommand(), port));
+            taskBuilder.setCommand(withPortEnvironmentVariable(taskBuilder.getCommand(), actualPort));
 
             // Add port to the health check (if defined)
             if (taskBuilder.hasHealthCheck()) {
                 taskBuilder.getHealthCheckBuilder().setCommand(
-                        withPortEnvironmentVariable(taskBuilder.getHealthCheckBuilder().getCommand(), port));
+                        withPortEnvironmentVariable(taskBuilder.getHealthCheckBuilder().getCommand(), actualPort));
             } else {
                 LOGGER.info("Health check is not defined for task: {}", taskName);
             }
@@ -99,7 +107,7 @@ public class PortEvaluationStage extends ResourceEvaluationStage implements Offe
                 Optional<Protos.HealthCheck> readinessCheck = CommonTaskUtils.getReadinessCheck(taskBuilder.build());
                 if (readinessCheck.isPresent()) {
                     Protos.HealthCheck readinessCheckWithPort = Protos.HealthCheck.newBuilder(readinessCheck.get())
-                            .setCommand(withPortEnvironmentVariable(readinessCheck.get().getCommand(), port))
+                            .setCommand(withPortEnvironmentVariable(readinessCheck.get().getCommand(), actualPort))
                             .build();
                     CommonTaskUtils.setReadinessCheck(taskBuilder, readinessCheckWithPort);
                 } else {
@@ -108,14 +116,14 @@ public class PortEvaluationStage extends ResourceEvaluationStage implements Offe
             } catch (TaskException e) {
                 LOGGER.error("Got exception while adding PORT env vars to ReadinessCheck", e);
             }
-            resourceBuilder = ResourceUtils.getResourceBuilder(taskBuilder, resource);
+            ResourceUtils.mergeResourceRanges(taskBuilder, resource);
+            discoveryInfoWriter.writeTaskDiscoveryInfo(taskBuilder, resource, actualPort);
         } else {
             Protos.ExecutorInfo.Builder executorBuilder = podInfoBuilder.getExecutorBuilder().get();
-            executorBuilder.setCommand(withPortEnvironmentVariable(executorBuilder.getCommand(), port));
-            resourceBuilder = ResourceUtils.getResourceBuilder(executorBuilder, resource);
+            executorBuilder.setCommand(withPortEnvironmentVariable(executorBuilder.getCommand(), actualPort));
+            ResourceUtils.mergeResourceRanges(executorBuilder, resource);
+            discoveryInfoWriter.writeExecutorDiscoveryInfo(executorBuilder, resource, actualPort);
         }
-
-        ResourceUtils.mergeRanges(resourceBuilder, resource);
     }
 
     @Override
@@ -182,7 +190,9 @@ public class PortEvaluationStage extends ResourceEvaluationStage implements Offe
 
     private static ResourceRequirement getPortRequirement(ResourceRequirement resourceRequirement, int port) {
         Protos.Resource.Builder builder = resourceRequirement.getResource().toBuilder();
-        builder.clearRanges().getRangesBuilder().addRange(Protos.Value.Range.newBuilder().setBegin(port).setEnd(port));
+        builder.clearRanges().getRangesBuilder().addRangeBuilder()
+            .setBegin(port)
+            .setEnd(port);
 
         return new ResourceRequirement(builder.build());
     }

@@ -22,9 +22,6 @@ import java.util.stream.IntStream;
 public class ResourceUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceUtils.class);
 
-    public static final String VIP_PREFIX = "VIP_";
-    public static final String VIP_HOST_TLD = "l4lb.thisdcos.directory";
-
     public static Resource getUnreservedResource(String name, Value value) {
         return setResource(Resource.newBuilder().setRole("*"), name, value);
     }
@@ -247,108 +244,6 @@ public class ResourceUtils {
         resBuilder.setReservation(getExpectedReservationInfo(resourceId, principal));
 
         return resBuilder.build();
-    }
-
-    public static TaskInfo.Builder addVIP(
-            TaskInfo.Builder builder,
-            String vipName,
-            Integer vipPort,
-            String protocol,
-            DiscoveryInfo.Visibility visibility,
-            Resource resource) {
-        if (builder.hasDiscovery()) {
-            addVIP(
-                    builder.getDiscoveryBuilder(),
-                    vipName,
-                    protocol,
-                    visibility,
-                    vipPort,
-                    (int) resource.getRanges().getRange(0).getBegin());
-        } else {
-            builder.setDiscovery(getVIPDiscoveryInfo(
-                    builder.getName(),
-                    vipName,
-                    vipPort,
-                    protocol,
-                    visibility,
-                    resource));
-        }
-
-        return builder;
-    }
-
-    public static ExecutorInfo.Builder addVIP(
-            ExecutorInfo.Builder builder,
-            String vipName,
-            Integer vipPort,
-            String protocol,
-            DiscoveryInfo.Visibility visibility,
-            Resource resource) {
-        if (builder.hasDiscovery()) {
-            addVIP(
-                    builder.getDiscoveryBuilder(),
-                    vipName,
-                    protocol,
-                    visibility,
-                    vipPort,
-                    (int) resource.getRanges().getRange(0).getBegin());
-        } else {
-            builder.setDiscovery(getVIPDiscoveryInfo(
-                    builder.getName(),
-                    vipName,
-                    vipPort,
-                    protocol,
-                    visibility,
-                    resource));
-        }
-
-        return builder;
-    }
-
-    private static DiscoveryInfo.Builder addVIP(
-            DiscoveryInfo.Builder builder,
-            String vipName,
-            String protocol,
-            DiscoveryInfo.Visibility visibility,
-            Integer vipPort,
-            int destPort) {
-        builder.getPortsBuilder()
-                .addPortsBuilder()
-                .setNumber(destPort)
-                .setProtocol(protocol)
-                .setVisibility(visibility)
-                .getLabelsBuilder()
-                .addLabels(getVIPLabel(vipName, vipPort));
-
-        return builder;
-    }
-
-    public static DiscoveryInfo getVIPDiscoveryInfo(
-            String taskName,
-            String vipName,
-            Integer vipPort,
-            String protocol,
-            DiscoveryInfo.Visibility visibility,
-            Resource r) {
-        DiscoveryInfo.Builder discoveryInfoBuilder = DiscoveryInfo.newBuilder()
-                .setVisibility(DiscoveryInfo.Visibility.CLUSTER)
-                .setName(taskName);
-
-        discoveryInfoBuilder.getPortsBuilder().addPortsBuilder()
-                .setNumber((int) r.getRanges().getRange(0).getBegin())
-                .setProtocol(protocol)
-                .setVisibility(visibility)
-                .getLabelsBuilder()
-                .addLabels(getVIPLabel(vipName, vipPort));
-
-        return discoveryInfoBuilder.build();
-    }
-
-    public static Label getVIPLabel(String vipName, Integer vipPort) {
-        return Label.newBuilder()
-                .setKey(String.format("%s%s", VIP_PREFIX, UUID.randomUUID().toString()))
-                .setValue(String.format("%s:%d", vipName, vipPort))
-                .build();
     }
 
     public static Resource setValue(Resource resource, Value value) {
@@ -585,7 +480,7 @@ public class ResourceUtils {
      * @param resource the resource to get the name from or to use as template if no such builder exists on the task
      * @return a resource builder attached to the task builder
      */
-    public static Resource.Builder getResourceBuilder(TaskInfo.Builder taskBuilder, Resource resource) {
+    private static Resource.Builder getResourceBuilder(TaskInfo.Builder taskBuilder, Resource resource) {
         for (Resource.Builder r : taskBuilder.getResourcesBuilderList()) {
             if (r.getName().equals(resource.getName())) {
                 return r;
@@ -604,7 +499,7 @@ public class ResourceUtils {
      * @param resource the resource to get the name from or to use as template if no such builder exists on the executor
      * @return a resource builder attached to the executor builder
      */
-    public static Resource.Builder getResourceBuilder(ExecutorInfo.Builder executorBuilder, Resource resource) {
+    private static Resource.Builder getResourceBuilder(ExecutorInfo.Builder executorBuilder, Resource resource) {
         for (Resource.Builder r : executorBuilder.getResourcesBuilderList()) {
             if (r.getName().equals(resource.getName())) {
                 return r;
@@ -620,10 +515,26 @@ public class ResourceUtils {
                         lhs.getRanges().getRangeList(), rhs.getRanges().getRangeList()))).build();
     }
 
-    public static Resource mergeRanges(Resource.Builder builder, Resource resource) {
-        return builder.setRanges(
+    /**
+     * Merges the provided {@link Resource}'s ranges onto any matching {@link Resource} present in the provided
+     * {@link TaskInfo.Builder}. If the {@link TaskInfo.Builder} lacks a matching resource, a new one is added.
+     */
+    public static void mergeResourceRanges(TaskInfo.Builder taskBuilder, Resource resource) {
+        Resource.Builder matchingResourceBuilder = getResourceBuilder(taskBuilder, resource);
+        matchingResourceBuilder.setRanges(
                 RangeAlgorithms.fromRangeList(RangeAlgorithms.mergeRanges(
-                        builder.getRanges().getRangeList(), resource.getRanges().getRangeList()))).build();
+                        matchingResourceBuilder.getRanges().getRangeList(), resource.getRanges().getRangeList())));
+    }
+
+    /**
+     * Merges the provided {@link Resource}'s ranges onto any matching {@link Resource} present in the provided
+     * {@link ExecutorInfo.Builder}. If the {@link ExecutorInfo.Builder} lacks a matching resource, a new one is added.
+     */
+    public static void mergeResourceRanges(ExecutorInfo.Builder executorBuilder, Resource resource) {
+        Resource.Builder matchingResourceBuilder = getResourceBuilder(executorBuilder, resource);
+        matchingResourceBuilder.setRanges(
+                RangeAlgorithms.fromRangeList(RangeAlgorithms.mergeRanges(
+                        matchingResourceBuilder.getRanges().getRangeList(), resource.getRanges().getRangeList())));
     }
 
     private static List<Resource> clearResourceIds(List<Resource> resources) {
