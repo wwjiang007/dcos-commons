@@ -5,6 +5,7 @@ import com.mesosphere.sdk.curator.CuratorStateStore;
 import com.mesosphere.sdk.dcos.DcosConstants;
 import com.mesosphere.sdk.kafka.api.*;
 import com.mesosphere.sdk.kafka.cmd.CmdExecutor;
+import com.mesosphere.sdk.kafka.cmd.EmptyValidator;
 import com.mesosphere.sdk.offer.evaluate.placement.RegexMatcher;
 import com.mesosphere.sdk.offer.evaluate.placement.StringMatcher;
 import com.mesosphere.sdk.scheduler.DefaultScheduler;
@@ -44,6 +45,7 @@ public class KafkaService extends DefaultService {
         schedulerBuilder.setEndpointProducer("zookeeper", EndpointProducer.constant(
                 schedulerBuilder.getServiceSpec().getZookeeperConnection() +
                         DcosConstants.SERVICE_ROOT_PATH_PREFIX + schedulerBuilder.getServiceSpec().getName()));
+        schedulerBuilder.setConfigValidators(Arrays.asList(new EmptyValidator()));
 
         initService(schedulerBuilder);
     }
