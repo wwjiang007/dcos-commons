@@ -32,7 +32,7 @@ public class ServiceSpecTest extends BaseServiceSpecTest {
     public void testYmlBase() throws Exception {
         testYaml("svc.yml");
     }
-/*
+
     @Test
     public void testYmlSimple() throws Exception {
         testYaml("examples/simple.yml");
@@ -62,5 +62,5 @@ public class ServiceSpecTest extends BaseServiceSpecTest {
     public void testYmlWebUrl() throws Exception {
         testYaml("examples/web-url.yml");
     }
-    */
+    
 }
