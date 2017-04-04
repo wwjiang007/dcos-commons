@@ -421,7 +421,8 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         }
 
         LOGGER.info("Creating new executor for pod {}, as no RUNNING tasks were found", podInstance.getName());
-        return getNewExecutorInfo("hello-world-role", "hello-world-principal", stateStore.fetchFrameworkId().get());
+        return getNewExecutorInfo("hello-world-role", "hello-world-principal",
+                stateStore.fetchFrameworkId().get());
     }
 
     private static Protos.ContainerInfo getContainerInfo(ContainerSpec containerSpec) {

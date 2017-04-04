@@ -54,8 +54,8 @@ public class DefaultOfferRequirementProviderTest {
 
         when(mockFileReader.read("config-one.conf.mustache")).thenReturn("hello");
         when(mockFileReader.read("config-two.xml.mustache")).thenReturn("hey");
+        when(stateStore.fetchFrameworkId()).thenReturn(Optional.of(TestConstants.FRAMEWORK_ID));
         podInstance = getPodInstance("valid-minimal-health-configfile.yml");
-
         uuid = UUID.randomUUID();
         provider = new DefaultOfferRequirementProvider(stateStore, TestConstants.SERVICE_NAME, uuid);
     }
@@ -94,6 +94,7 @@ public class DefaultOfferRequirementProviderTest {
         Assert.assertEquals(TestConstants.POD_TYPE, offerRequirement.getType());
         Assert.assertEquals(1, offerRequirement.getTaskRequirements().size());
 
+        Assert.assertTrue(offerRequirement.getTaskRequirements().stream().findFirst().isPresent());
         TaskRequirement taskRequirement = offerRequirement.getTaskRequirements().stream().findFirst().get();
         TaskInfo taskInfo = taskRequirement.getTaskInfo();
         Assert.assertEquals(TestConstants.HEALTH_CHECK_CMD, taskInfo.getHealthCheck().getCommand().getValue());

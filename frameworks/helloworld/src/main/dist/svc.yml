@@ -12,13 +12,21 @@ pods:
     tasks:
       server:
         goal: RUNNING
-        cmd: echo $TASK_NAME >> output && sleep $SLEEP_DURATION
+        #cmd: echo $TASK_NAME >> output && sleep $SLEEP_DURATION
+        cmd: "echo MESOS_SANDBOX: $MESOS_SANDBOX PWD: $PWD && sleep $SLEEP_DURATION"
         resource-set: hello-resources
         env:
           SLEEP_DURATION: 1000
+        health-check:
+          cmd: "echo MESOS_SANDBOX: $MESOS_SANDBOX PWD: $PWD"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10
       sidecar:
         goal: FINISHED
-        cmd: echo $TASK_NAME >> output && sleep $SLEEP_DURATION
+        cmd: echo 'SIDECAR' >> output
         resource-set: sidecar-resources
         env:
           SLEEP_DURATION: 1000
